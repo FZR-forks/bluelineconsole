@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.InputDevice;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -45,6 +46,8 @@ public class MainActivity extends BaseWindowActivity {
     private int resumeId = 0;
 
     private boolean temporaryContentShown = false;
+
+    private boolean superKeyPressedAlone = false;
 
     private static MainActivity myActiveInstance = null;
 
@@ -138,6 +141,33 @@ public class MainActivity extends BaseWindowActivity {
         }
 
         super.onDestroy();
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (!this.shouldHandleSuperKeyOverview(event)) {
+            return super.dispatchKeyEvent(event);
+        }
+
+        if (event.getAction() == KeyEvent.ACTION_DOWN && MainActivity.isSuperKey(event.getKeyCode())) {
+            this.superKeyPressedAlone = event.getRepeatCount() == 0;
+            return true;
+        }
+
+        if (this.superKeyPressedAlone && event.getAction() == KeyEvent.ACTION_DOWN && !MainActivity.isSuperKey(event.getKeyCode())) {
+            this.superKeyPressedAlone = false;
+        }
+
+        if (event.getAction() == KeyEvent.ACTION_UP && MainActivity.isSuperKey(event.getKeyCode())) {
+            final boolean shouldOpenOverview = this.superKeyPressedAlone;
+            this.superKeyPressedAlone = false;
+            if (shouldOpenOverview) {
+                this.openOverviewForPhysicalKeyboard();
+                return true;
+            }
+        }
+
+        return super.dispatchKeyEvent(event);
     }
 
     @Override
@@ -362,5 +392,29 @@ public class MainActivity extends BaseWindowActivity {
 
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+    }
+
+    static boolean isSuperKey(int keyCode) {
+        return keyCode == KeyEvent.KEYCODE_META_LEFT || keyCode == KeyEvent.KEYCODE_META_RIGHT;
+    }
+
+    private boolean shouldHandleSuperKeyOverview(KeyEvent event) {
+        return this.iAmHomeActivity
+                && event != null
+                && event.getDevice() != null
+                && !event.getDevice().isVirtual()
+                && event.getDevice().getKeyboardType() != InputDevice.KEYBOARD_TYPE_NONE;
+    }
+
+    private void openOverviewForPhysicalKeyboard() {
+        if (this.commandSearchAggregator == null) {
+            this.mainInputText.setText("");
+
+        } else {
+            this.changeInputText("");
+        }
+
+        this.mainInputText.requestFocus();
+        this.mainInputText.requestFocusFromTouch();
     }
 }
