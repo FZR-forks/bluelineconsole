@@ -32,7 +32,7 @@ public class URLEntry {
         }
 
         if (AppSearchProviderUri.isAppSearchProviderUri(url_base)) {
-            return this.has_query ? 0 : R.string.error_invalid_url_least_validation_for_web;
+            return this.has_query ? 0 : R.string.error_app_search_provider_requires_query;
         }
 
         if (! StringValidator.isValidURLAccepted(url_base, true, context)) {

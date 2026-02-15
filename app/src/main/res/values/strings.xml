@@ -167,6 +167,8 @@
     <string name="error_failure_could_not_start_command">ERROR: could not start command</string>
     <string name="error_failure_could_not_open_url">ERROR: could not open URL</string>
     <string name="error_failure_not_found_opening_application_with_class">\"%1$s\" is not a launchable package.</string>
+    <string name="error_no_app_search_providers">No apps with search support found.</string>
+    <string name="error_app_search_provider_requires_query">App search providers require the search engine option to be enabled.</string>
     <string name="error_failure_could_not_connect_to_the_widget">ERROR: could not connect to the widget</string>
 
     <!-- Error messages, app internal errors -->

@@ -100,7 +100,7 @@ public class PreferencesEachURLActivity extends BaseWindowActivity {
     private void openAppSearchProviderSelector() {
         List<AppSearchProviderItem> providers = getAppSearchProviders();
         if (providers.isEmpty()) {
-            Toast.makeText(this, R.string.error_failure_could_not_open_url, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.error_no_app_search_providers, Toast.LENGTH_LONG).show();
             return;
         }
 

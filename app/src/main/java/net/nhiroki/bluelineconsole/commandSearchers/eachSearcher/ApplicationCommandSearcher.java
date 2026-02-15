@@ -461,6 +461,7 @@ public class ApplicationCommandSearcher implements CommandSearcher {
             return activity -> {
                 LauncherApps launcherApps = activity.getSystemService(LauncherApps.class);
                 if (launcherApps == null) {
+                    Toast.makeText(activity, String.format(activity.getString(R.string.error_failure_not_found_opening_application_with_class), shortcutInfoWithAppLabel.shortcutInfo.getPackage()), Toast.LENGTH_LONG).show();
                     return;
                 }
 

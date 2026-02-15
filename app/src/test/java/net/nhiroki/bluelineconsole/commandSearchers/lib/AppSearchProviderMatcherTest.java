@@ -20,7 +20,7 @@ public class AppSearchProviderMatcherTest {
 
     @Test
     public void matchScoreMatchesAliasFromFirstTwoChars() {
-        int score = AppSearchProviderMatcher.matchScore("wa", "Whats App", "com.whatsapp");
+        int score = AppSearchProviderMatcher.matchScore("ms", "Meta Search", "com.whatsapp");
         assertTrue(score >= 2000);
     }
 
