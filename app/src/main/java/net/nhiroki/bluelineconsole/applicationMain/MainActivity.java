@@ -66,6 +66,10 @@ public class MainActivity extends BaseWindowActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (!OverlayPermissionHelper.canDrawOverOtherApps(this)) {
+            OverlayPermissionHelper.requestDrawOverOtherAppsPermission(this);
+        }
+
         if (!this.iAmHomeActivity) {
             MainActivity.myActiveInstance = this;
         }

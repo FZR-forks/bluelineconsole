@@ -21,6 +21,13 @@
             app:iconSpaceReserved="false"
             >
         </Preference>
+        <Preference
+            android:key="pref_overlay_permission"
+            android:title="@string/preferences_item_overlay_permission_title"
+            android:summary="@string/preferences_item_overlay_permission_summary_not_granted"
+            app:iconSpaceReserved="false"
+            >
+        </Preference>
         <SwitchPreference
             android:key="pref_main_always_show_notification"
             android:title="@string/preferences_item_main_always_show_notification_title"

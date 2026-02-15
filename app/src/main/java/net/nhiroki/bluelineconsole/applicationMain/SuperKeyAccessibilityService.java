@@ -60,9 +60,14 @@ public class SuperKeyAccessibilityService extends AccessibilityService {
     }
 
     private void launchOverview() {
-        final Intent openHomeIntent = new Intent(this, HomeActivity.class);
-        openHomeIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        openHomeIntent.putExtra(Intent.EXTRA_TEXT, "");
-        startActivity(openHomeIntent);
+        if (!OverlayPermissionHelper.canDrawOverOtherApps(this)) {
+            OverlayPermissionHelper.requestDrawOverOtherAppsPermission(this);
+            return;
+        }
+
+        final Intent openMainIntent = new Intent(this, MainActivity.class);
+        openMainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        openMainIntent.putExtra(Intent.EXTRA_TEXT, "");
+        startActivity(openMainIntent);
     }
 }

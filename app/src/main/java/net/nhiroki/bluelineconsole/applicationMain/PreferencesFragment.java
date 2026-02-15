@@ -85,6 +85,20 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                 }
         );
 
+        findPreference(OverlayPermissionHelper.PREFERENCE_KEY_OPEN_OVERLAY_PERMISSION_SETTINGS).setSummary(
+                OverlayPermissionHelper.canDrawOverOtherApps(this.getContext())
+                        ? getString(R.string.preferences_item_overlay_permission_summary_granted)
+                        : getString(R.string.preferences_item_overlay_permission_summary_not_granted)
+        );
+
+        findPreference(OverlayPermissionHelper.PREFERENCE_KEY_OPEN_OVERLAY_PERMISSION_SETTINGS).setOnPreferenceClickListener(
+                preference -> {
+                    ((PreferencesActivity) PreferencesFragment.this.getActivity()).setComingBackFlag();
+                    OverlayPermissionHelper.requestDrawOverOtherAppsPermission(PreferencesFragment.this.getContext());
+                    return true;
+                }
+        );
+
         ((ListPreference) findPreference(AppThemeDirectory.PREF_NAME_THEME)).setEntries(AppThemeDirectory.getThemePreferenceTitles(this.getContext()));
         ((ListPreference) findPreference(AppThemeDirectory.PREF_NAME_THEME)).setEntryValues(AppThemeDirectory.getThemePreferenceKeys());
 
