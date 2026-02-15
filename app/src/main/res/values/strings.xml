@@ -83,6 +83,9 @@
     <string name="preferences_item_main_show_startup_help_summary">This option just shows you the guidance for help command. It is better to disable this option once you remembered "help" command.</string>
     <string name="preferences_item_default_assist_app_title">Set as default assistant app</string>
     <string name="preferences_item_default_assist_app_summary">To open Blue Line Console by long-pressing home button everywhere, set it as default assistant app from setting menu.</string>
+    <string name="preferences_item_overlay_permission_title">Display over other apps permission</string>
+    <string name="preferences_item_overlay_permission_summary_not_granted">Required to show Blue Line Console over other apps. Tap to open system settings.</string>
+    <string name="preferences_item_overlay_permission_summary_granted">Granted. Blue Line Console can draw over other apps.</string>
     <string name="preferences_item_main_always_show_notification_title">Always show icon as notification</string>
     <string name="preferences_item_main_always_show_notification_summary">Always show the notification icon to start Blue Line Console everywhere.</string>
     <string name="preferences_item_text_match_strategy_title">Text search matching style</string>
@@ -238,4 +241,5 @@
 
     <!-- Legal English texts -->
     <string name="license_apache_license_v2.0_name" translatable="false">Apache License, Version 2.0</string>
+    <string name="accessibility_service_super_key_description">Open Blue Line Console overview when Super/Windows key is pressed on a physical keyboard.</string>
 </resources>
