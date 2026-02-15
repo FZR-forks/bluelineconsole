@@ -10,6 +10,7 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.ShortcutInfo;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Process;
 import android.preference.PreferenceManager;
@@ -25,6 +26,7 @@ import androidx.annotation.NonNull;
 import net.nhiroki.bluelineconsole.R;
 import net.nhiroki.bluelineconsole.applicationMain.MainActivity;
 import net.nhiroki.bluelineconsole.commandSearchers.lib.AppSearchActionQueryParser;
+import net.nhiroki.bluelineconsole.commandSearchers.lib.AppSearchProviderMatcher;
 import net.nhiroki.bluelineconsole.commandSearchers.lib.ShortcutQueryMatcher;
 import net.nhiroki.bluelineconsole.commandSearchers.lib.StringMatchStrategy;
 import net.nhiroki.bluelineconsole.commands.applications.ApplicationDatabase;
@@ -32,6 +34,7 @@ import net.nhiroki.bluelineconsole.dataStore.cache.ApplicationInformation;
 import net.nhiroki.bluelineconsole.interfaces.CandidateEntry;
 import net.nhiroki.bluelineconsole.interfaces.CommandSearcher;
 import net.nhiroki.bluelineconsole.interfaces.EventLauncher;
+import net.nhiroki.bluelineconsole.wrapperForAndroid.ContactsReader;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,13 +43,19 @@ import java.util.List;
 import java.util.Map;
 
 public class ApplicationCommandSearcher implements CommandSearcher {
+    private static final String WHATSAPP_PACKAGE = "com.whatsapp";
+
     private ApplicationDatabase applicationDatabase;
     private List<ShortcutInfoWithAppLabel> shortcutInfoList = new ArrayList<>();
+    private List<ContactsReader.Contact> cachedContacts = new ArrayList<>();
+    private boolean contactsLoaded = false;
 
     @Override
     public void refresh(Context context) {
         this.applicationDatabase = new ApplicationDatabase(context);
         this.shortcutInfoList = new ArrayList<>();
+        this.cachedContacts = new ArrayList<>();
+        this.contactsLoaded = false;
     }
 
     @Override
@@ -94,16 +103,18 @@ public class ApplicationCommandSearcher implements CommandSearcher {
             }
 
             if (parsedQuery != null) {
-                int selectorMatchResult = StringMatchStrategy.match(context, parsedQuery.appSelector, appLabel, false);
-                if (selectorMatchResult == -1) {
-                    selectorMatchResult = StringMatchStrategy.match(context, parsedQuery.appSelector, applicationInformation.getPackageName(), false);
-                }
-
-                if (selectorMatchResult != -1 && canLaunchSearchAction(context, applicationInformation.getPackageName())) {
-                    appCandidates.add(new Pair<>(40000 + selectorMatchResult, new AppSearchActionCandidateEntry(applicationInformation, androidApplicationInfo, appLabel, parsedQuery.searchText)));
+                int selectorMatchResult = AppSearchProviderMatcher.matchScore(parsedQuery.appSelector, appLabel, applicationInformation.getPackageName());
+                if (selectorMatchResult != -1) {
+                    if (canLaunchSearchAction(context, applicationInformation.getPackageName())) {
+                        appCandidates.add(new Pair<>(35000 + selectorMatchResult, new AppSearchActionCandidateEntry(applicationInformation, androidApplicationInfo, appLabel, parsedQuery.searchText)));
+                    } else if (parsedQuery.bangSyntax) {
+                        appCandidates.add(new Pair<>(36000 + selectorMatchResult, new AppOpenCandidateEntry(context, applicationInformation, androidApplicationInfo, appLabel)));
+                    }
                 }
             }
         }
+
+        appCandidates.addAll(findWhatsAppContactActionCandidates(context, query));
 
         if (Build.VERSION.SDK_INT >= 25) {
             if (shortcutInfoList.isEmpty()) {
@@ -134,6 +145,81 @@ public class ApplicationCommandSearcher implements CommandSearcher {
         }
 
         return candidates;
+    }
+
+    private List<Pair<Integer, CandidateEntry>> findWhatsAppContactActionCandidates(Context context, String query) {
+        List<Pair<Integer, CandidateEntry>> ret = new ArrayList<>();
+
+        if (query == null || query.trim().isEmpty()) {
+            return ret;
+        }
+
+        if (!isPackageInstalled(context, WHATSAPP_PACKAGE)) {
+            return ret;
+        }
+
+        ensureContactsLoaded(context);
+        for (ContactsReader.Contact contact : cachedContacts) {
+            int match = StringMatchStrategy.match(context, query, contact.displayName, false);
+            if (match == -1) {
+                continue;
+            }
+
+            String phoneNumber = firstPhoneNumber(contact);
+            if (phoneNumber == null) {
+                continue;
+            }
+
+            String normalized = normalizePhone(phoneNumber);
+            if (normalized.isEmpty()) {
+                continue;
+            }
+
+            ret.add(new Pair<>(55000 + match, new WhatsAppContactCandidateEntry(contact.displayName, normalized)));
+        }
+
+        return ret;
+    }
+
+    private void ensureContactsLoaded(Context context) {
+        if (contactsLoaded) {
+            return;
+        }
+
+        contactsLoaded = true;
+
+        if (!ContactsReader.appHasReadContactsPermission(context)) {
+            return;
+        }
+
+        try {
+            cachedContacts = ContactsReader.fetchAllContacts(context);
+        } catch (ContactsReader.ContactReadPermissionDenied ignored) {
+            cachedContacts = new ArrayList<>();
+        }
+    }
+
+    private String firstPhoneNumber(ContactsReader.Contact contact) {
+        if (contact == null || contact.phoneNumbers == null || contact.phoneNumbers.isEmpty()) {
+            return null;
+        }
+        return contact.phoneNumbers.get(0);
+    }
+
+    private String normalizePhone(String phoneNumber) {
+        if (phoneNumber == null) {
+            return "";
+        }
+        return phoneNumber.replaceAll("[^0-9+]", "");
+    }
+
+    private boolean isPackageInstalled(Context context, String packageName) {
+        try {
+            context.getPackageManager().getPackageInfo(packageName, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
     }
 
     private boolean canLaunchSearchAction(Context context, String packageName) {
@@ -168,7 +254,7 @@ public class ApplicationCommandSearcher implements CommandSearcher {
         }
 
         LauncherApps launcherApps = context.getSystemService(LauncherApps.class);
-        if (launcherApps == null) {
+        if (launcherApps == null || !launcherApps.hasShortcutHostPermission()) {
             return new ArrayList<>();
         }
 
@@ -324,7 +410,7 @@ public class ApplicationCommandSearcher implements CommandSearcher {
 
         @Override
         public String getTitle() {
-            return String.format("%s: %s", appLabel, searchText);
+            return String.format("Search \"%s\" in %s", searchText, appLabel);
         }
 
         @Override
@@ -354,6 +440,70 @@ public class ApplicationCommandSearcher implements CommandSearcher {
         @Override
         public Drawable getIcon(Context context) {
             return context.getPackageManager().getApplicationIcon(androidApplicationInfo);
+        }
+
+        @Override
+        public boolean hasEvent() {
+            return true;
+        }
+
+        @Override
+        public boolean isSubItem() {
+            return true;
+        }
+
+        @Override
+        public boolean viewIsRecyclable() {
+            return true;
+        }
+    }
+
+    private static class WhatsAppContactCandidateEntry implements CandidateEntry {
+        private final String contactName;
+        private final String normalizedPhone;
+
+        WhatsAppContactCandidateEntry(String contactName, String normalizedPhone) {
+            this.contactName = contactName;
+            this.normalizedPhone = normalizedPhone;
+        }
+
+        @Override
+        @NonNull
+        public String getTitle() {
+            return String.format("Message %s on WhatsApp", contactName);
+        }
+
+        @Override
+        public View getView(MainActivity mainActivity) {
+            return null;
+        }
+
+        @Override
+        public boolean hasLongView() {
+            return false;
+        }
+
+        @Override
+        public EventLauncher getEventLauncher(Context context) {
+            return activity -> {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/" + Uri.encode(normalizedPhone)));
+                intent.setPackage(WHATSAPP_PACKAGE);
+                try {
+                    activity.startActivity(intent);
+                    activity.finishIfNotHome();
+                } catch (RuntimeException e) {
+                    Toast.makeText(activity, String.format(activity.getString(R.string.error_failure_not_found_opening_application_with_class), WHATSAPP_PACKAGE), Toast.LENGTH_LONG).show();
+                }
+            };
+        }
+
+        @Override
+        public Drawable getIcon(Context context) {
+            try {
+                return context.getPackageManager().getApplicationIcon(WHATSAPP_PACKAGE);
+            } catch (PackageManager.NameNotFoundException e) {
+                return null;
+            }
         }
 
         @Override
