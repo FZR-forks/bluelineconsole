@@ -1,12 +1,10 @@
 package net.nhiroki.bluelineconsole.commandSearchers.eachSearcher;
 
-import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.content.pm.ShortcutInfo;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -25,8 +23,6 @@ import androidx.annotation.NonNull;
 
 import net.nhiroki.bluelineconsole.R;
 import net.nhiroki.bluelineconsole.applicationMain.MainActivity;
-import net.nhiroki.bluelineconsole.commandSearchers.lib.AppSearchActionQueryParser;
-import net.nhiroki.bluelineconsole.commandSearchers.lib.AppSearchProviderMatcher;
 import net.nhiroki.bluelineconsole.commandSearchers.lib.ShortcutQueryMatcher;
 import net.nhiroki.bluelineconsole.commandSearchers.lib.StringMatchStrategy;
 import net.nhiroki.bluelineconsole.commands.applications.ApplicationDatabase;
@@ -78,7 +74,6 @@ public class ApplicationCommandSearcher implements CommandSearcher {
     public List<CandidateEntry> searchCandidateEntries(String query, Context context) {
         List<CandidateEntry> candidates = new ArrayList<>();
         final boolean matchAllApplications = query.equalsIgnoreCase("all_apps");
-        final AppSearchActionQueryParser.ParsedQuery parsedQuery = AppSearchActionQueryParser.parse(query);
 
         List<Pair<Integer, CandidateEntry>> appCandidates = new ArrayList<>();
         for (ApplicationInformation applicationInformation : applicationDatabase.getApplicationInformationList()) {
@@ -100,13 +95,6 @@ public class ApplicationCommandSearcher implements CommandSearcher {
             if (packageNameMatchResult != -1) {
                 appCandidates.add(new Pair<>(100000 + packageNameMatchResult, new AppOpenCandidateEntry(context, applicationInformation, androidApplicationInfo, appLabel)));
                 continue;
-            }
-
-            if (parsedQuery != null) {
-                int selectorMatchResult = AppSearchProviderMatcher.matchScore(parsedQuery.appSelector, appLabel, applicationInformation.getPackageName());
-                if (selectorMatchResult != -1 && canLaunchSearchAction(context, applicationInformation.getPackageName())) {
-                    appCandidates.add(new Pair<>(35000 + selectorMatchResult, new AppSearchActionCandidateEntry(applicationInformation, androidApplicationInfo, appLabel, parsedQuery.searchText)));
-                }
             }
         }
 
@@ -216,32 +204,6 @@ public class ApplicationCommandSearcher implements CommandSearcher {
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
-    }
-
-    private boolean canLaunchSearchAction(Context context, String packageName) {
-        return resolveSearchIntent(context, packageName, "test") != null;
-    }
-
-    private Intent resolveSearchIntent(Context context, String packageName, String searchText) {
-        PackageManager packageManager = context.getPackageManager();
-
-        Intent appSearchIntent = new Intent(Intent.ACTION_SEARCH);
-        appSearchIntent.setPackage(packageName);
-        appSearchIntent.putExtra(SearchManager.QUERY, searchText);
-        ResolveInfo resolveInfo = packageManager.resolveActivity(appSearchIntent, 0);
-        if (resolveInfo != null) {
-            return appSearchIntent;
-        }
-
-        Intent webSearchIntent = new Intent(Intent.ACTION_WEB_SEARCH);
-        webSearchIntent.setPackage(packageName);
-        webSearchIntent.putExtra(SearchManager.QUERY, searchText);
-        resolveInfo = packageManager.resolveActivity(webSearchIntent, 0);
-        if (resolveInfo != null) {
-            return webSearchIntent;
-        }
-
-        return null;
     }
 
     private List<ShortcutInfoWithAppLabel> getAvailableShortcuts(Context context) {
@@ -383,69 +345,6 @@ public class ApplicationCommandSearcher implements CommandSearcher {
         @Override
         public boolean isSubItem() {
             return false;
-        }
-
-        @Override
-        public boolean viewIsRecyclable() {
-            return true;
-        }
-    }
-
-    private class AppSearchActionCandidateEntry implements CandidateEntry {
-        private final String packageName;
-        private final String appLabel;
-        private final ApplicationInfo androidApplicationInfo;
-        private final String searchText;
-
-        AppSearchActionCandidateEntry(ApplicationInformation applicationInformation, ApplicationInfo androidApplicationInfo, String appLabel, String searchText) {
-            this.packageName = applicationInformation.getPackageName();
-            this.appLabel = appLabel;
-            this.androidApplicationInfo = androidApplicationInfo;
-            this.searchText = searchText;
-        }
-
-        @Override
-        public String getTitle() {
-            return String.format("Search \"%s\" in %s", searchText, appLabel);
-        }
-
-        @Override
-        public View getView(MainActivity mainActivity) {
-            return null;
-        }
-
-        @Override
-        public boolean hasLongView() {
-            return false;
-        }
-
-        @Override
-        public EventLauncher getEventLauncher(Context context) {
-            return activity -> {
-                Intent searchIntent = resolveSearchIntent(activity, packageName, searchText);
-                if (searchIntent == null) {
-                    Toast.makeText(activity, String.format(activity.getString(R.string.error_failure_not_found_opening_application_with_class), packageName), Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                activity.startActivity(searchIntent);
-                activity.finishIfNotHome();
-            };
-        }
-
-        @Override
-        public Drawable getIcon(Context context) {
-            return context.getPackageManager().getApplicationIcon(androidApplicationInfo);
-        }
-
-        @Override
-        public boolean hasEvent() {
-            return true;
-        }
-
-        @Override
-        public boolean isSubItem() {
-            return true;
         }
 
         @Override

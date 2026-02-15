@@ -5,6 +5,7 @@ import android.content.Context;
 import androidx.annotation.StringRes;
 
 import net.nhiroki.bluelineconsole.R;
+import net.nhiroki.bluelineconsole.commands.urls.AppSearchProviderUri;
 import net.nhiroki.bluelineconsole.lib.StringValidator;
 
 public class URLEntry {
@@ -28,6 +29,10 @@ public class URLEntry {
 
         if (this.display_name.equals("")) {
             return R.string.error_empty_display_name;
+        }
+
+        if (AppSearchProviderUri.isAppSearchProviderUri(url_base)) {
+            return this.has_query ? 0 : R.string.error_invalid_url_least_validation_for_web;
         }
 
         if (! StringValidator.isValidURLAccepted(url_base, true, context)) {

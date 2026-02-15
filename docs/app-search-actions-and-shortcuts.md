@@ -1,46 +1,36 @@
-# App search actions and app shortcuts
+# App search providers and app shortcuts
 
-Blue Line Console supports two Android app-integrated behaviors in the application searcher.
+Blue Line Console supports Android app-integrated behavior in two ways.
 
-## 1) App search providers (`!provider query`)
+## 1) App search providers via existing search-engine enrollment
 
-You can use apps as search providers similarly to web search engine shortcuts.
+App search is now integrated into the **existing custom search engine workflow**.
 
-- Required syntax: `!<provider> <query>`
+Configure from preferences the same way you configure custom URL/search providers, then choose an app instead of entering only a URL:
 
-Examples:
+1. Open custom URL/search-engine settings.
+2. Add or edit a provider.
+3. Use **Select app as search provider**.
+4. Save as a search engine (`has_query` enabled).
 
-- `!wa mom`
-- `!yt lo-fi mix`
+After enrollment, usage is identical to other search engines:
 
-`<provider>` is matched fuzzily against app label/package/aliases, so you do **not** need to type a full app name.
+- `<command> <query>`
 
-When the matched app supports `ACTION_SEARCH` or `ACTION_WEB_SEARCH`, Blue Line Console shows a candidate that launches in-app search with your query.
+Example:
 
-If `!provider` matches an app that does not expose in-app search actions, no in-app-search candidate is shown.
+- `wa mom`
 
-App actions/shortcuts are separate from app-search providers and appear in normal search without prefixes.
+This launches `ACTION_SEARCH` / `ACTION_WEB_SEARCH` in the selected app package.
 
-## 2) App shortcuts (quick actions)
+## 2) App actions and shortcuts in normal search
 
-Blue Line Console indexes launcher shortcuts (dynamic/manifest/pinned and cached where available) from installed apps, and surfaces them in search.
+App actions remain separate from app-search providers and appear through normal/classic search without prefixes.
 
-This enables flows like:
-
-- typing a contact name and seeing a shortcut such as **“Message Alice (WhatsApp)”**
-- launching app-provided quick actions directly from command search
-
-### Important Android behavior
-
-Shortcut visibility depends on Android launcher permissions:
-
-- `LauncherApps` shortcuts are available only when shortcut host permission is granted (typically for launcher apps / default home role).
-- If host permission is unavailable, launcher shortcuts from other apps cannot be listed by Android.
-
-To improve messaging use-cases, Blue Line Console additionally provides a WhatsApp contact action candidate from contacts (`Message <name> on WhatsApp`) when contacts permission and WhatsApp are available.
+- Launcher shortcuts from installed apps are shown when Android shortcut host permission is available.
+- WhatsApp contact action fallback (`Message <name> on WhatsApp`) is also shown when contacts permission and WhatsApp are available.
 
 ## Notes
 
-- Shortcut availability depends on what each app publishes.
-- Search-action availability depends on whether an app handles `ACTION_SEARCH` or `ACTION_WEB_SEARCH`.
-- On older Android versions, unavailable APIs/flags are skipped safely.
+- App search providers are stored in the same custom provider storage as URLs/search engines.
+- Shortcut visibility still depends on Android launcher shortcut host permission.

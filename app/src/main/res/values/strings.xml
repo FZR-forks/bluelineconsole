@@ -119,8 +119,9 @@
     <string name="preferences_url_add_button">Add custom URL or search engine</string>
     <string name="preferences_url_column_command_name">Command name</string>
     <string name="preferences_url_column_display_name">Display name</string>
-    <string name="preferences_url_column_url">URL</string>
+    <string name="preferences_url_column_url">URL (or app search provider)</string>
     <string name="preferences_url_column_has_query">Search engine (query is added at the end when enabled)</string>
+    <string name="preferences_url_select_app_button">Select app as search provider</string>
     <string name="preferences_url_property_enabled">Enabled</string>
     <string name="preferences_url_property_disabled">Disabled</string>
     <string name="preferences_url_property_preset">Preset</string>
