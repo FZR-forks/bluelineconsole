@@ -238,4 +238,5 @@
 
     <!-- Legal English texts -->
     <string name="license_apache_license_v2.0_name" translatable="false">Apache License, Version 2.0</string>
+    <string name="accessibility_service_super_key_description">Open Blue Line Console overview when Super/Windows key is pressed on a physical keyboard.</string>
 </resources>

@@ -146,12 +146,13 @@ public class MainActivity extends BaseWindowActivity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (!this.shouldHandleSuperKeyOverview(event)) {
+            this.superKeyPressedAlone = false;
             return super.dispatchKeyEvent(event);
         }
 
         if (event.getAction() == KeyEvent.ACTION_DOWN && MainActivity.isSuperKey(event.getKeyCode())) {
             this.superKeyPressedAlone = event.getRepeatCount() == 0;
-            return true;
+            return super.dispatchKeyEvent(event);
         }
 
         if (this.superKeyPressedAlone && event.getAction() == KeyEvent.ACTION_DOWN && !MainActivity.isSuperKey(event.getKeyCode())) {
@@ -247,6 +248,7 @@ public class MainActivity extends BaseWindowActivity {
     @Override
     protected void onPause() {
         ++this.resumeId;
+        this.superKeyPressedAlone = false;
         if (threadPool != null) {
             threadPool.shutdownNow();
         }
