@@ -41,7 +41,7 @@ public class SuperKeyAccessibilityService extends AccessibilityService {
             this.superKeyPressedAlone = false;
             if (shouldOpenOverview) {
                 this.launchOverview();
-                return true;
+                return false;
             }
         }
 

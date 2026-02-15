@@ -168,7 +168,7 @@ public class MainActivity extends BaseWindowActivity {
             this.superKeyPressedAlone = false;
             if (shouldOpenOverview) {
                 this.openOverviewForPhysicalKeyboard();
-                return true;
+                return super.dispatchKeyEvent(event);
             }
         }
 
