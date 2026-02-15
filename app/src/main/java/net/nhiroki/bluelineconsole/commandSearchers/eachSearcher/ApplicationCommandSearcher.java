@@ -104,12 +104,8 @@ public class ApplicationCommandSearcher implements CommandSearcher {
 
             if (parsedQuery != null) {
                 int selectorMatchResult = AppSearchProviderMatcher.matchScore(parsedQuery.appSelector, appLabel, applicationInformation.getPackageName());
-                if (selectorMatchResult != -1) {
-                    if (canLaunchSearchAction(context, applicationInformation.getPackageName())) {
-                        appCandidates.add(new Pair<>(35000 + selectorMatchResult, new AppSearchActionCandidateEntry(applicationInformation, androidApplicationInfo, appLabel, parsedQuery.searchText)));
-                    } else if (parsedQuery.bangSyntax) {
-                        appCandidates.add(new Pair<>(36000 + selectorMatchResult, new AppOpenCandidateEntry(context, applicationInformation, androidApplicationInfo, appLabel)));
-                    }
+                if (selectorMatchResult != -1 && canLaunchSearchAction(context, applicationInformation.getPackageName())) {
+                    appCandidates.add(new Pair<>(35000 + selectorMatchResult, new AppSearchActionCandidateEntry(applicationInformation, androidApplicationInfo, appLabel, parsedQuery.searchText)));
                 }
             }
         }

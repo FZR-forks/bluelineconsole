@@ -17,12 +17,13 @@ public class AppSearchActionQueryParser {
             return null;
         }
 
-        boolean bangSyntax = trimmed.startsWith("!");
-        if (bangSyntax) {
-            trimmed = trimmed.substring(1).trim();
-            if (trimmed.isEmpty()) {
-                return null;
-            }
+        if (!trimmed.startsWith("!")) {
+            return null;
+        }
+
+        trimmed = trimmed.substring(1).trim();
+        if (trimmed.isEmpty()) {
+            return null;
         }
 
         int separator = trimmed.indexOf(' ');
@@ -37,18 +38,15 @@ public class AppSearchActionQueryParser {
             return null;
         }
 
-        return new ParsedQuery(appSelector, searchText, bangSyntax);
+        return new ParsedQuery(appSelector, searchText);
     }
 
     public static class ParsedQuery {
         public final String appSelector;
         public final String searchText;
-        public final boolean bangSyntax;
-
-        public ParsedQuery(String appSelector, String searchText, boolean bangSyntax) {
+        public ParsedQuery(String appSelector, String searchText) {
             this.appSelector = appSelector;
             this.searchText = searchText;
-            this.bangSyntax = bangSyntax;
         }
     }
 }

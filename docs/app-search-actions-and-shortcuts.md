@@ -6,20 +6,20 @@ Blue Line Console supports two Android app-integrated behaviors in the applicati
 
 You can use apps as search providers similarly to web search engine shortcuts.
 
-- Preferred syntax: `!<provider> <query>`
-- Legacy syntax is still supported: `<provider> <query>`
+- Required syntax: `!<provider> <query>`
 
 Examples:
 
 - `!wa mom`
 - `!yt lo-fi mix`
-- `youtube lo-fi mix`
 
 `<provider>` is matched fuzzily against app label/package/aliases, so you do **not** need to type a full app name.
 
 When the matched app supports `ACTION_SEARCH` or `ACTION_WEB_SEARCH`, Blue Line Console shows a candidate that launches in-app search with your query.
 
-If `!provider` matches an app that does not expose in-app search actions, Blue Line Console falls back to opening the app.
+If `!provider` matches an app that does not expose in-app search actions, no in-app-search candidate is shown.
+
+App actions/shortcuts are separate from app-search providers and appear in normal search without prefixes.
 
 ## 2) App shortcuts (quick actions)
 
