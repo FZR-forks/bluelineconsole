@@ -75,6 +75,7 @@
     <string name="preferences_category_custom_commands">Custom commands</string>
     <string name="preferences_category_home_screen">Home Screen</string>
     <string name="preferences_category_contacts">Contacts</string>
+    <string name="preferences_category_files">Files</string>
     <string name="preferences_category_advanced">Advanced</string>
     <string name="preferences_category_about_this_app">About</string>
 
@@ -105,6 +106,8 @@
     <string name="preferences_item_home_screen_default_items_summary">Display results and widgets when nothing is input at home screen, when Blue Line Console is set to home app.</string>
     <string name="preferences_item_contacts_enable_search">Enable contacts search</string>
     <string name="preferences_item_contacts_search_permission_explanation">Enabling contacts search requires permission to read Contacts. You may be asked to grant the access to Contacts.</string>
+    <string name="preferences_item_files_enable_search">Enable local file search</string>
+    <string name="preferences_item_files_search_permission_explanation">Search local files by file name. This may request storage permission on Android 12 and older.</string>
     <string name="preferences_item_advanced_main_edittext_hint_locale_english_title">Notify English input to keyboard input software on command input window</string>
     <string name="preferences_item_advanced_main_edittext_hint_locale_english_summary">Command input window uses setImeHintLocales and sets to English locale. Behavior differs between keyboard input softwares.</string>
     <string name="preferences_item_advanced_main_edittext_flagforceascii_title">Set IME_FLAG_FORCE_ASCII flag on command input window</string>
@@ -167,6 +170,7 @@
     <string name="error_failure_could_not_start_command">ERROR: could not start command</string>
     <string name="error_failure_could_not_open_url">ERROR: could not open URL</string>
     <string name="error_failure_not_found_opening_application_with_class">\"%1$s\" is not a launchable package.</string>
+    <string name="error_failure_not_found_opening_application">No application can open this file.</string>
     <string name="error_no_app_search_providers">No apps with search support found.</string>
     <string name="error_app_search_provider_requires_query">App search providers require the search engine option to be enabled.</string>
     <string name="error_failure_could_not_connect_to_the_widget">ERROR: could not connect to the widget</string>

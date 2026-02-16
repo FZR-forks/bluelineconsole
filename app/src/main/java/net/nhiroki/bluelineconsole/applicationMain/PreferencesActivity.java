@@ -15,11 +15,13 @@ import androidx.preference.SwitchPreference;
 
 import net.nhiroki.bluelineconsole.R;
 import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.ContactSearchCommandSearcher;
+import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.FileSystemSearchCommandSearcher;
 import net.nhiroki.bluelineconsole.wrapperForAndroid.ContactsReader;
 
 public class PreferencesActivity extends BaseWindowActivity {
     private static final int READ_CONTACT_PERMISSION_GRANT_REQUEST_ID = 1;
     private static final int POST_NOTIFICATIONS_PERMISSION_GRANT_REQUEST_ID = 2;
+    private static final int READ_EXTERNAL_STORAGE_PERMISSION_GRANT_REQUEST_ID = 3;
 
     private boolean _comingBack = false;
     private PreferencesFragmentWithOnChangeListener preferenceFragment = null;
@@ -71,6 +73,15 @@ public class PreferencesActivity extends BaseWindowActivity {
                     ((SwitchPreference)this.preferenceFragment.findPreference(AppNotification.PREF_KEY_ALWAYS_SHOW_NOTIFICATION)).setChecked(false);
                 }
             }
+            if (permissions[i].equals(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    SharedPreferences.Editor prefEdit = PreferenceManager.getDefaultSharedPreferences(this).edit();
+                    prefEdit.putBoolean(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY, false);
+                    prefEdit.apply();
+
+                    ((SwitchPreference)this.preferenceFragment.findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY)).setChecked(false);
+                }
+            }
         }
     }
 
@@ -101,6 +112,14 @@ public class PreferencesActivity extends BaseWindowActivity {
                         PreferencesFragmentWithOnChangeListener.this.requestPermissions(new String[]{Manifest.permission.READ_CONTACTS},
                                 READ_CONTACT_PERMISSION_GRANT_REQUEST_ID);
                     }
+                }
+
+                if (key.equals(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY) &&
+                        sharedPreferences.getBoolean(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY, false) &&
+                        Build.VERSION.SDK_INT <= 32 &&
+                        ContextCompat.checkSelfPermission(PreferencesFragmentWithOnChangeListener.this.getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    PreferencesFragmentWithOnChangeListener.this.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                            READ_EXTERNAL_STORAGE_PERMISSION_GRANT_REQUEST_ID);
                 }
             };
         }

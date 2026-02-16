@@ -8,6 +8,7 @@ import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.CalculatorComma
 import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.ColorDisplayCommandSearcher;
 import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.ContactSearchCommandSearcher;
 import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.DateCommandSearcher;
+import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.FileSystemSearchCommandSearcher;
 import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.HelpCommandSearcher;
 import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.NetUtilCommandSearcher;
 import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.PreferencesCommandSearcher;
@@ -50,6 +51,7 @@ public class CommandSearchAggregator {
         // Command searchers which may return tons candidate should comes to the last of "search result"
         commandSearcherList.add(new ContactSearchCommandSearcher());
         commandSearcherList.add(new ApplicationCommandSearcher());
+        commandSearcherList.add(new FileSystemSearchCommandSearcher());
 
         // This should be separately called and order does not matter, and results are placed at last.
         commandSearcherListAlwaysLast.add(new SearchEngineDefaultCommandSearcher(context));
@@ -139,4 +141,3 @@ public class CommandSearchAggregator {
         return ret;
     }
 }
-
