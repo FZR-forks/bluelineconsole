@@ -3,6 +3,7 @@ package net.nhiroki.bluelineconsole.commandSearchers.eachSearcher;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.app.SearchManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.view.View;
@@ -13,6 +14,7 @@ import androidx.core.content.ContextCompat;
 
 import net.nhiroki.bluelineconsole.R;
 import net.nhiroki.bluelineconsole.applicationMain.MainActivity;
+import net.nhiroki.bluelineconsole.commands.urls.AppSearchProviderUri;
 import net.nhiroki.bluelineconsole.commands.urls.WebSearchEngine;
 import net.nhiroki.bluelineconsole.commands.urls.WebSearchEnginesDatabase;
 import net.nhiroki.bluelineconsole.interfaces.CandidateEntry;
@@ -165,6 +167,33 @@ public class SearchEngineCommandSearcher implements CommandSearcher {
         public EventLauncher getEventLauncher(final Context context) {
             return activity -> {
                 try {
+                    if (AppSearchProviderUri.isAppSearchProviderUri(urlBase)) {
+                        final String packageName = AppSearchProviderUri.getPackageName(urlBase);
+                        if (packageName == null) {
+                            Toast.makeText(context, R.string.error_failure_could_not_open_url, Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        Intent searchIntent = new Intent(Intent.ACTION_SEARCH);
+                        searchIntent.setPackage(packageName);
+                        searchIntent.putExtra(SearchManager.QUERY, query);
+
+                        if (searchIntent.resolveActivity(activity.getPackageManager()) == null) {
+                            searchIntent = new Intent(Intent.ACTION_WEB_SEARCH);
+                            searchIntent.setPackage(packageName);
+                            searchIntent.putExtra(SearchManager.QUERY, query);
+                        }
+
+                        if (searchIntent.resolveActivity(activity.getPackageManager()) == null) {
+                            Toast.makeText(activity, String.format(activity.getString(R.string.error_failure_not_found_opening_application_with_class), packageName), Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        activity.startActivity(searchIntent);
+                        activity.finish();
+                        return;
+                    }
+
                     activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(urlBase + Uri.encode(query))));
                     activity.finish();
                 } catch (ActivityNotFoundException e) {

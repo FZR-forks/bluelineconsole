@@ -71,6 +71,13 @@
                 android:layout_height="wrap_content"
                 android:inputType="textUri"
                 />
+            <Button
+                android:id="@+id/url_each_select_app_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/preferences_url_select_app_button"
+                android:drawableStart="@android:drawable/ic_menu_search"
+                />
             <Switch
                 android:id="@+id/url_each_has_query"
                 android:layout_width="match_parent"

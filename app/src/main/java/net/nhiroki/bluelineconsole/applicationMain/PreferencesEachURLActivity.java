@@ -1,19 +1,29 @@
 package net.nhiroki.bluelineconsole.applicationMain;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.Toast;
 
 import net.nhiroki.bluelineconsole.R;
 import net.nhiroki.bluelineconsole.applicationMain.lib.EditTextConfigurations;
+import net.nhiroki.bluelineconsole.commands.urls.AppSearchProviderUri;
 import net.nhiroki.bluelineconsole.commands.urls.WebSearchEngine;
 import net.nhiroki.bluelineconsole.commands.urls.WebSearchEnginesDatabase;
 import net.nhiroki.bluelineconsole.dataStore.persistent.URLEntry;
 import net.nhiroki.bluelineconsole.dataStore.persistent.URLPreferences;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 public class PreferencesEachURLActivity extends BaseWindowActivity {
@@ -51,6 +61,11 @@ public class PreferencesEachURLActivity extends BaseWindowActivity {
             entry.url_base = ((EditText)findViewById(R.id.url_each_base_url)).getText().toString();
             entry.has_query = ((Switch)findViewById(R.id.url_each_has_query)).isChecked();
 
+            if (AppSearchProviderUri.isAppSearchProviderUri(entry.url_base)) {
+                entry.has_query = true;
+                ((Switch)findViewById(R.id.url_each_has_query)).setChecked(true);
+            }
+
             int err = entry.validate(PreferencesEachURLActivity.this);
 
             if (err != 0) {
@@ -78,6 +93,75 @@ public class PreferencesEachURLActivity extends BaseWindowActivity {
             new WebSearchEnginesDatabase(PreferencesEachURLActivity.this).unsetEntryEnabledById(PreferencesEachURLActivity.this, PreferencesEachURLActivity.this._entry_id);
             PreferencesEachURLActivity.this.finish();
         });
+
+        findViewById(R.id.url_each_select_app_button).setOnClickListener(v -> openAppSearchProviderSelector());
+    }
+
+    private void openAppSearchProviderSelector() {
+        List<AppSearchProviderItem> providers = getAppSearchProviders();
+        if (providers.isEmpty()) {
+            Toast.makeText(this, R.string.error_no_app_search_providers, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        List<String> labels = new ArrayList<>();
+        for (AppSearchProviderItem item: providers) {
+            labels.add(item.appLabel + " (" + item.packageName + ")");
+        }
+
+        ListView listView = new ListView(this);
+        listView.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, labels));
+
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.preferences_url_select_app_button)
+                .setView(listView)
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            AppSearchProviderItem selected = providers.get(position);
+            ((EditText)findViewById(R.id.url_each_base_url)).setText(AppSearchProviderUri.fromPackageName(selected.packageName));
+            ((EditText)findViewById(R.id.url_each_display_name)).setText(selected.appLabel);
+            ((Switch)findViewById(R.id.url_each_has_query)).setChecked(true);
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private List<AppSearchProviderItem> getAppSearchProviders() {
+        PackageManager packageManager = getPackageManager();
+        Map<String, ResolveInfo> providerMap = new HashMap<>();
+
+        Intent searchIntent = new Intent(Intent.ACTION_SEARCH);
+        for (ResolveInfo resolveInfo : packageManager.queryIntentActivities(searchIntent, 0)) {
+            providerMap.put(resolveInfo.activityInfo.packageName, resolveInfo);
+        }
+
+        Intent webSearchIntent = new Intent(Intent.ACTION_WEB_SEARCH);
+        for (ResolveInfo resolveInfo : packageManager.queryIntentActivities(webSearchIntent, 0)) {
+            providerMap.put(resolveInfo.activityInfo.packageName, resolveInfo);
+        }
+
+        List<AppSearchProviderItem> ret = new ArrayList<>();
+        for (Map.Entry<String, ResolveInfo> entry: providerMap.entrySet()) {
+            CharSequence label = entry.getValue().loadLabel(packageManager);
+            String display = label == null ? entry.getKey() : label.toString();
+            ret.add(new AppSearchProviderItem(entry.getKey(), display));
+        }
+
+        ret.sort((o1, o2) -> o1.appLabel.compareTo(o2.appLabel));
+        return ret;
+    }
+
+    private static class AppSearchProviderItem {
+        private final String packageName;
+        private final String appLabel;
+
+        private AppSearchProviderItem(String packageName, String appLabel) {
+            this.packageName = packageName;
+            this.appLabel = appLabel;
+        }
     }
 
     @Override
