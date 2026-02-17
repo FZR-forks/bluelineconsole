@@ -136,12 +136,14 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
     private void searchUsingMediaStore(Context context, String query, List<ScoredFileResult> scoredResults, Set<String> uriSet) {
         final Uri collectionUri = MediaStore.Files.getContentUri("external");
 
-        final String[] projection = new String[]{
-                MediaStore.Files.FileColumns._ID,
-                MediaStore.Files.FileColumns.DISPLAY_NAME,
-                MediaStore.Files.FileColumns.MIME_TYPE,
-                MediaStore.Files.FileColumns.RELATIVE_PATH
-        };
+        List<String> projectionList = new ArrayList<>();
+        projectionList.add(MediaStore.Files.FileColumns._ID);
+        projectionList.add(MediaStore.Files.FileColumns.DISPLAY_NAME);
+        projectionList.add(MediaStore.Files.FileColumns.MIME_TYPE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            projectionList.add(MediaStore.Files.FileColumns.RELATIVE_PATH);
+        }
+        final String[] projection = projectionList.toArray(new String[0]);
 
         final String selection = MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?";
         final String[] selectionArgs = new String[]{"%" + query + "%"};
