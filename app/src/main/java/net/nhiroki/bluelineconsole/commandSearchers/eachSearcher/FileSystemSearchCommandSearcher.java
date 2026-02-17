@@ -79,7 +79,8 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
             return new ArrayList<>();
         }
 
-        if (!hasRequiredPermission(context)) {
+        final boolean mediaStorePermissionGranted = hasRequiredPermissionForMediaStore(context);
+        if (Build.VERSION.SDK_INT <= 32 && !mediaStorePermissionGranted) {
             pref.edit().putBoolean(PREF_FILE_SEARCH_ENABLED_KEY, false).apply();
             return new ArrayList<>();
         }
@@ -92,7 +93,9 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
         List<ScoredFileResult> scoredResults = new ArrayList<>();
         Set<String> uriSet = new HashSet<>();
 
-        searchUsingMediaStore(context, normalizedQuery, scoredResults, uriSet);
+        if (mediaStorePermissionGranted) {
+            searchUsingMediaStore(context, normalizedQuery, scoredResults, uriSet);
+        }
         searchUsingGrantedFolders(context, normalizedQuery, scoredResults, uriSet);
 
         Collections.sort(scoredResults, (left, right) -> Integer.compare(left.score, right.score));
@@ -108,6 +111,11 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
 
     public static Intent createFolderPickerIntent(String commonFolderId) {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+
         if (Build.VERSION.SDK_INT >= 26) {
             Uri initial = DocumentsContract.buildRootUri("com.android.externalstorage.documents", "primary");
             if (commonFolderId != null && !commonFolderId.isEmpty()) {
@@ -126,11 +134,14 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
         pref.edit().putStringSet(PREF_FILE_SEARCH_TREE_URIS_KEY, updated).apply();
     }
 
-    private boolean hasRequiredPermission(Context context) {
+    private boolean hasRequiredPermissionForMediaStore(Context context) {
         if (Build.VERSION.SDK_INT <= 32) {
             return ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         }
-        return true;
+
+        // MediaStore Files query is intentionally disabled on Android 13+ for now.
+        // SAF tree-based search still works with user-granted folder access.
+        return false;
     }
 
     private void searchUsingMediaStore(Context context, String query, List<ScoredFileResult> scoredResults, Set<String> uriSet) {
