@@ -11,6 +11,7 @@ import net.nhiroki.bluelineconsole.BuildConfig;
 import net.nhiroki.bluelineconsole.R;
 import net.nhiroki.bluelineconsole.applicationMain.lib.EditTextConfigurations;
 import net.nhiroki.bluelineconsole.applicationMain.theming.AppThemeDirectory;
+import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.FileSystemSearchCommandSearcher;
 import net.nhiroki.bluelineconsole.commandSearchers.lib.StringMatchStrategy;
 import net.nhiroki.bluelineconsole.commands.urls.WebSearchEngine;
 import net.nhiroki.bluelineconsole.commands.urls.WebSearchEnginesDatabase;
@@ -97,6 +98,17 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                     OverlayPermissionHelper.requestDrawOverOtherAppsPermission(PreferencesFragment.this.getContext());
                     return true;
                 }
+        );
+
+        findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_OPEN_ALL_FILES_ACCESS_SETTINGS_KEY).setOnPreferenceClickListener(preference -> {
+            ((PreferencesActivity) PreferencesFragment.this.getActivity()).openAllFilesAccessSettings();
+            return true;
+        });
+
+        findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_OPEN_ALL_FILES_ACCESS_SETTINGS_KEY).setSummary(
+                FileSystemSearchCommandSearcher.hasAllFilesAccessPermission()
+                        ? getString(R.string.preferences_item_files_open_all_files_access_settings_summary_granted)
+                        : getString(R.string.preferences_item_files_open_all_files_access_settings_summary_not_granted)
         );
 
         ((ListPreference) findPreference(AppThemeDirectory.PREF_NAME_THEME)).setEntries(AppThemeDirectory.getThemePreferenceTitles(this.getContext()));
