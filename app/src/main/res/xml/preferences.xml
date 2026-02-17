@@ -160,6 +160,24 @@
             android:defaultValue="false"
             app:iconSpaceReserved="false"
             />
+        <Preference
+            android:key="pref_file_search_grant_downloads"
+            android:title="@string/preferences_item_files_grant_downloads_title"
+            android:summary="@string/preferences_item_files_grant_summary"
+            app:iconSpaceReserved="false"
+            />
+        <Preference
+            android:key="pref_file_search_grant_documents"
+            android:title="@string/preferences_item_files_grant_documents_title"
+            android:summary="@string/preferences_item_files_grant_summary"
+            app:iconSpaceReserved="false"
+            />
+        <Preference
+            android:key="pref_file_search_grant_pictures"
+            android:title="@string/preferences_item_files_grant_pictures_title"
+            android:summary="@string/preferences_item_files_grant_summary"
+            app:iconSpaceReserved="false"
+            />
     </PreferenceCategory>
     <PreferenceCategory
         android:title="@string/preferences_category_advanced"

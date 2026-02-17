@@ -11,6 +11,7 @@ import net.nhiroki.bluelineconsole.BuildConfig;
 import net.nhiroki.bluelineconsole.R;
 import net.nhiroki.bluelineconsole.applicationMain.lib.EditTextConfigurations;
 import net.nhiroki.bluelineconsole.applicationMain.theming.AppThemeDirectory;
+import net.nhiroki.bluelineconsole.commandSearchers.eachSearcher.FileSystemSearchCommandSearcher;
 import net.nhiroki.bluelineconsole.commandSearchers.lib.StringMatchStrategy;
 import net.nhiroki.bluelineconsole.commands.urls.WebSearchEngine;
 import net.nhiroki.bluelineconsole.commands.urls.WebSearchEnginesDatabase;
@@ -98,6 +99,19 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                     return true;
                 }
         );
+
+        findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_DOWNLOADS_KEY).setOnPreferenceClickListener(preference -> {
+            ((PreferencesActivity) PreferencesFragment.this.getActivity()).requestCommonFolderAccess(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_DOWNLOADS_KEY);
+            return true;
+        });
+        findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_DOCUMENTS_KEY).setOnPreferenceClickListener(preference -> {
+            ((PreferencesActivity) PreferencesFragment.this.getActivity()).requestCommonFolderAccess(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_DOCUMENTS_KEY);
+            return true;
+        });
+        findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_PICTURES_KEY).setOnPreferenceClickListener(preference -> {
+            ((PreferencesActivity) PreferencesFragment.this.getActivity()).requestCommonFolderAccess(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_PICTURES_KEY);
+            return true;
+        });
 
         ((ListPreference) findPreference(AppThemeDirectory.PREF_NAME_THEME)).setEntries(AppThemeDirectory.getThemePreferenceTitles(this.getContext()));
         ((ListPreference) findPreference(AppThemeDirectory.PREF_NAME_THEME)).setEntryValues(AppThemeDirectory.getThemePreferenceKeys());

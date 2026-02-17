@@ -10,3 +10,8 @@ Available at:
 
 ### Screenshots
 <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="240"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="240"> <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="240">
+
+
+### Documentation
+- [App search actions and shortcuts](./docs/app-search-actions-and-shortcuts.md)
+- [Local file search](./docs/file-search.md)
