@@ -1,6 +1,7 @@
 package net.nhiroki.bluelineconsole.applicationMain;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -101,9 +102,13 @@ public class PreferencesActivity extends BaseWindowActivity {
 
         try {
             this.startActivity(intent);
-        } catch (Exception ignored) {
-            Intent fallbackIntent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-            this.startActivity(fallbackIntent);
+        } catch (ActivityNotFoundException e) {
+            try {
+                Intent fallbackIntent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                this.startActivity(fallbackIntent);
+            } catch (ActivityNotFoundException ignored) {
+                // Settings page is not available on this device.
+            }
         }
     }
 

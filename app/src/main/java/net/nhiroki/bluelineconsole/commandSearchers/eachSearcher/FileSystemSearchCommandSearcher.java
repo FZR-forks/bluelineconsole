@@ -119,8 +119,12 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
         }
         final String[] projection = projectionList.toArray(new String[0]);
 
-        final String selection = MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?";
-        final String[] selectionArgs = new String[]{"%" + query + "%"};
+        final String escapedQuery = query
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+        final String selection = MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ? ESCAPE '\\'";
+        final String[] selectionArgs = new String[]{"%" + escapedQuery + "%"};
         final String sortOrder = MediaStore.Files.FileColumns.DATE_MODIFIED + " DESC";
 
         ContentResolver contentResolver = context.getContentResolver();
@@ -222,7 +226,7 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
 
         @Override
         public boolean hasLongView() {
-            return true;
+            return !detail.isEmpty();
         }
 
         @Override
