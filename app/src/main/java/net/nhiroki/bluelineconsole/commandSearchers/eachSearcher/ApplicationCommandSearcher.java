@@ -169,7 +169,7 @@ public class ApplicationCommandSearcher implements CommandSearcher {
                 continue;
             }
 
-            ret.add(new ScoredCandidateEntry(55000 + match, AppUsageHistory.getLastOpenedAt(context, WHATSAPP_PACKAGE), contact.displayName, WHATSAPP_PACKAGE, new WhatsAppContactCandidateEntry(contact.displayName, normalized)));
+            ret.add(new ScoredCandidateEntry(55000 + match, AppUsageHistory.getLastOpenedAt(context, WHATSAPP_PACKAGE, normalized), contact.displayName, WHATSAPP_PACKAGE, new WhatsAppContactCandidateEntry(contact.displayName, normalized)));
         }
 
         return ret;
@@ -437,7 +437,7 @@ public class ApplicationCommandSearcher implements CommandSearcher {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/" + Uri.encode(normalizedPhone)));
                 intent.setPackage(WHATSAPP_PACKAGE);
                 try {
-                    AppUsageHistory.recordOpen(context, WHATSAPP_PACKAGE);
+                    AppUsageHistory.recordOpen(context, WHATSAPP_PACKAGE, normalizedPhone);
                     activity.startActivity(intent);
                     activity.finishIfNotHome();
                 } catch (RuntimeException e) {
