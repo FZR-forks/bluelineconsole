@@ -149,6 +149,12 @@ public class MainActivity extends BaseWindowActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        if (this.shouldHandleCloseShortcut(event)) {
+            this.superKeyPressedAlone = false;
+            this.closeForKeyboardShortcut();
+            return true;
+        }
+
         if (!this.shouldHandleSuperKeyOverview(event)) {
             this.superKeyPressedAlone = false;
             return super.dispatchKeyEvent(event);
@@ -402,6 +408,26 @@ public class MainActivity extends BaseWindowActivity {
 
     static boolean isSuperKey(int keyCode) {
         return keyCode == KeyEvent.KEYCODE_META_LEFT || keyCode == KeyEvent.KEYCODE_META_RIGHT;
+    }
+
+    private boolean shouldHandleCloseShortcut(KeyEvent event) {
+        return isCloseShortcutEvent(event);
+    }
+
+    static boolean isCloseShortcutEvent(KeyEvent event) {
+        if (event == null || event.getAction() != KeyEvent.ACTION_UP) {
+            return false;
+        }
+
+        final int keyCode = event.getKeyCode();
+        return keyCode == KeyEvent.KEYCODE_ESCAPE
+                || (keyCode == KeyEvent.KEYCODE_W && event.isCtrlPressed())
+                || (keyCode == KeyEvent.KEYCODE_Q && event.isCtrlPressed())
+                || (keyCode == KeyEvent.KEYCODE_F4 && event.isAltPressed());
+    }
+
+    private void closeForKeyboardShortcut() {
+        this.finish();
     }
 
     private boolean shouldHandleSuperKeyOverview(KeyEvent event) {

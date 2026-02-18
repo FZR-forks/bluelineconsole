@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Process;
 import android.preference.PreferenceManager;
-import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -27,6 +26,7 @@ import net.nhiroki.bluelineconsole.commandSearchers.lib.ShortcutQueryMatcher;
 import net.nhiroki.bluelineconsole.commandSearchers.lib.StringMatchStrategy;
 import net.nhiroki.bluelineconsole.commands.applications.ApplicationDatabase;
 import net.nhiroki.bluelineconsole.dataStore.cache.ApplicationInformation;
+import net.nhiroki.bluelineconsole.dataStore.deviceLocal.AppUsageHistory;
 import net.nhiroki.bluelineconsole.interfaces.CandidateEntry;
 import net.nhiroki.bluelineconsole.interfaces.CommandSearcher;
 import net.nhiroki.bluelineconsole.interfaces.EventLauncher;
@@ -75,26 +75,27 @@ public class ApplicationCommandSearcher implements CommandSearcher {
         List<CandidateEntry> candidates = new ArrayList<>();
         final boolean matchAllApplications = query.equalsIgnoreCase("all_apps");
 
-        List<Pair<Integer, CandidateEntry>> appCandidates = new ArrayList<>();
+        List<ScoredCandidateEntry> appCandidates = new ArrayList<>();
         for (ApplicationInformation applicationInformation : applicationDatabase.getApplicationInformationList()) {
             final String appLabel = applicationInformation.getLabel();
-            final ApplicationInfo androidApplicationInfo = applicationDatabase.getAndroidApplicationInfo(applicationInformation.getPackageName());
+            final String packageName = applicationInformation.getPackageName();
+            final ApplicationInfo androidApplicationInfo = applicationDatabase.getAndroidApplicationInfo(packageName);
+            final long usageScore = AppUsageHistory.getLastOpenedAt(context, packageName);
 
             if (matchAllApplications) {
-                appCandidates.add(new Pair<>(0, new AppOpenCandidateEntry(context, applicationInformation, androidApplicationInfo, appLabel)));
+                appCandidates.add(new ScoredCandidateEntry(0, usageScore, appLabel, packageName, new AppOpenCandidateEntry(context, applicationInformation, androidApplicationInfo, appLabel)));
                 continue;
             }
 
             int appLabelMatchResult = StringMatchStrategy.match(context, query, appLabel, false);
             if (appLabelMatchResult != -1) {
-                appCandidates.add(new Pair<>(appLabelMatchResult, new AppOpenCandidateEntry(context, applicationInformation, androidApplicationInfo, appLabel)));
+                appCandidates.add(new ScoredCandidateEntry(appLabelMatchResult, usageScore, appLabel, packageName, new AppOpenCandidateEntry(context, applicationInformation, androidApplicationInfo, appLabel)));
                 continue;
             }
 
-            int packageNameMatchResult = StringMatchStrategy.match(context, query, applicationInformation.getPackageName(), false);
+            int packageNameMatchResult = StringMatchStrategy.match(context, query, packageName, false);
             if (packageNameMatchResult != -1) {
-                appCandidates.add(new Pair<>(100000 + packageNameMatchResult, new AppOpenCandidateEntry(context, applicationInformation, androidApplicationInfo, appLabel)));
-                continue;
+                appCandidates.add(new ScoredCandidateEntry(100000 + packageNameMatchResult, usageScore, appLabel, packageName, new AppOpenCandidateEntry(context, applicationInformation, androidApplicationInfo, appLabel)));
             }
         }
 
@@ -118,21 +119,30 @@ public class ApplicationCommandSearcher implements CommandSearcher {
                     continue;
                 }
 
-                appCandidates.add(new Pair<>(50000 + shortcutMatchResult, new AppShortcutCandidateEntry(context, shortcutInfoWithAppLabel)));
+                appCandidates.add(new ScoredCandidateEntry(50000 + shortcutMatchResult, AppUsageHistory.getLastOpenedAt(context, shortcutInfoWithAppLabel.shortcutInfo.getPackage()), shortcutInfoWithAppLabel.shortLabel, shortcutInfoWithAppLabel.shortcutInfo.getPackage(), new AppShortcutCandidateEntry(context, shortcutInfoWithAppLabel)));
             }
         }
 
-        Collections.sort(appCandidates, (o1, o2) -> o1.first.compareTo(o2.first));
+        Collections.sort(appCandidates, (left, right) -> compareCandidateScores(
+                left.matchScore,
+                left.usageScore,
+                left.titleForSorting,
+                left.packageNameForSorting,
+                right.matchScore,
+                right.usageScore,
+                right.titleForSorting,
+                right.packageNameForSorting
+        ));
 
-        for (Pair<Integer, CandidateEntry> entry : appCandidates) {
-            candidates.add(entry.second);
+        for (ScoredCandidateEntry entry : appCandidates) {
+            candidates.add(entry.candidateEntry);
         }
 
         return candidates;
     }
 
-    private List<Pair<Integer, CandidateEntry>> findWhatsAppContactActionCandidates(Context context, String query) {
-        List<Pair<Integer, CandidateEntry>> ret = new ArrayList<>();
+    private List<ScoredCandidateEntry> findWhatsAppContactActionCandidates(Context context, String query) {
+        List<ScoredCandidateEntry> ret = new ArrayList<>();
 
         if (query == null || query.trim().isEmpty()) {
             return ret;
@@ -159,7 +169,7 @@ public class ApplicationCommandSearcher implements CommandSearcher {
                 continue;
             }
 
-            ret.add(new Pair<>(55000 + match, new WhatsAppContactCandidateEntry(contact.displayName, normalized)));
+            ret.add(new ScoredCandidateEntry(55000 + match, AppUsageHistory.getLastOpenedAt(context, WHATSAPP_PACKAGE), contact.displayName, WHATSAPP_PACKAGE, new WhatsAppContactCandidateEntry(contact.displayName, normalized)));
         }
 
         return ret;
@@ -263,6 +273,48 @@ public class ApplicationCommandSearcher implements CommandSearcher {
         return ret;
     }
 
+    static int compareCandidateScores(
+            int leftMatchScore,
+            long leftUsageScore,
+            String leftTitle,
+            String leftPackageName,
+            int rightMatchScore,
+            long rightUsageScore,
+            String rightTitle,
+            String rightPackageName
+    ) {
+        if (leftMatchScore != rightMatchScore) {
+            return Integer.compare(leftMatchScore, rightMatchScore);
+        }
+
+        if (leftUsageScore != rightUsageScore) {
+            return Long.compare(rightUsageScore, leftUsageScore);
+        }
+
+        int titleCompare = leftTitle.compareToIgnoreCase(rightTitle);
+        if (titleCompare != 0) {
+            return titleCompare;
+        }
+
+        return leftPackageName.compareTo(rightPackageName);
+    }
+
+    private static class ScoredCandidateEntry {
+        private final int matchScore;
+        private final long usageScore;
+        private final String titleForSorting;
+        private final String packageNameForSorting;
+        private final CandidateEntry candidateEntry;
+
+        ScoredCandidateEntry(int matchScore, long usageScore, String titleForSorting, String packageNameForSorting, CandidateEntry candidateEntry) {
+            this.matchScore = matchScore;
+            this.usageScore = usageScore;
+            this.titleForSorting = titleForSorting == null ? "" : titleForSorting;
+            this.packageNameForSorting = packageNameForSorting == null ? "" : packageNameForSorting;
+            this.candidateEntry = candidateEntry;
+        }
+    }
+
     private static class ShortcutInfoWithAppLabel {
         private final ShortcutInfo shortcutInfo;
         private final String shortLabel;
@@ -327,6 +379,7 @@ public class ApplicationCommandSearcher implements CommandSearcher {
                     Toast.makeText(activity, String.format(activity.getString(R.string.error_failure_not_found_opening_application_with_class), packageName), Toast.LENGTH_LONG).show();
                     return;
                 }
+                AppUsageHistory.recordOpen(context, packageName);
                 activity.startActivity(intent);
                 activity.finishIfNotHome();
             };
@@ -384,6 +437,7 @@ public class ApplicationCommandSearcher implements CommandSearcher {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/" + Uri.encode(normalizedPhone)));
                 intent.setPackage(WHATSAPP_PACKAGE);
                 try {
+                    AppUsageHistory.recordOpen(context, WHATSAPP_PACKAGE);
                     activity.startActivity(intent);
                     activity.finishIfNotHome();
                 } catch (RuntimeException e) {
@@ -466,6 +520,7 @@ public class ApplicationCommandSearcher implements CommandSearcher {
                 }
 
                 try {
+                    AppUsageHistory.recordOpen(context, shortcutInfoWithAppLabel.shortcutInfo.getPackage());
                     launcherApps.startShortcut(
                             shortcutInfoWithAppLabel.shortcutInfo.getPackage(),
                             shortcutInfoWithAppLabel.shortcutInfo.getId(),

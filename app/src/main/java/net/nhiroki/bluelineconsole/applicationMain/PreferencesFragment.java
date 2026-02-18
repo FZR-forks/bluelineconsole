@@ -86,6 +86,20 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                 }
         );
 
+        findPreference(SuperKeyAccessibilityPermissionHelper.PREFERENCE_KEY_OPEN_ACCESSIBILITY_SETTINGS).setSummary(
+                SuperKeyAccessibilityPermissionHelper.isGranted(this.getContext())
+                        ? getString(R.string.preferences_item_super_key_accessibility_permission_summary_granted)
+                        : getString(R.string.preferences_item_super_key_accessibility_permission_summary_not_granted)
+        );
+
+        findPreference(SuperKeyAccessibilityPermissionHelper.PREFERENCE_KEY_OPEN_ACCESSIBILITY_SETTINGS).setOnPreferenceClickListener(
+                preference -> {
+                    ((PreferencesActivity) PreferencesFragment.this.getActivity()).setComingBackFlag();
+                    SuperKeyAccessibilityPermissionHelper.requestPermission(PreferencesFragment.this.getContext());
+                    return true;
+                }
+        );
+
         findPreference(OverlayPermissionHelper.PREFERENCE_KEY_OPEN_OVERLAY_PERMISSION_SETTINGS).setSummary(
                 OverlayPermissionHelper.canDrawOverOtherApps(this.getContext())
                         ? getString(R.string.preferences_item_overlay_permission_summary_granted)
