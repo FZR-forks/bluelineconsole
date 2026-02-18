@@ -100,18 +100,16 @@ public class PreferencesFragment extends PreferenceFragmentCompat {
                 }
         );
 
-        findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_DOWNLOADS_KEY).setOnPreferenceClickListener(preference -> {
-            ((PreferencesActivity) PreferencesFragment.this.getActivity()).requestCommonFolderAccess(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_DOWNLOADS_KEY);
+        findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_OPEN_ALL_FILES_ACCESS_SETTINGS_KEY).setOnPreferenceClickListener(preference -> {
+            ((PreferencesActivity) PreferencesFragment.this.getActivity()).openAllFilesAccessSettings();
             return true;
         });
-        findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_DOCUMENTS_KEY).setOnPreferenceClickListener(preference -> {
-            ((PreferencesActivity) PreferencesFragment.this.getActivity()).requestCommonFolderAccess(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_DOCUMENTS_KEY);
-            return true;
-        });
-        findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_PICTURES_KEY).setOnPreferenceClickListener(preference -> {
-            ((PreferencesActivity) PreferencesFragment.this.getActivity()).requestCommonFolderAccess(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_PICTURES_KEY);
-            return true;
-        });
+
+        findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_OPEN_ALL_FILES_ACCESS_SETTINGS_KEY).setSummary(
+                FileSystemSearchCommandSearcher.hasAllFilesAccessPermission()
+                        ? getString(R.string.preferences_item_files_open_all_files_access_settings_summary_granted)
+                        : getString(R.string.preferences_item_files_open_all_files_access_settings_summary_not_granted)
+        );
 
         ((ListPreference) findPreference(AppThemeDirectory.PREF_NAME_THEME)).setEntries(AppThemeDirectory.getThemePreferenceTitles(this.getContext()));
         ((ListPreference) findPreference(AppThemeDirectory.PREF_NAME_THEME)).setEntryValues(AppThemeDirectory.getThemePreferenceKeys());

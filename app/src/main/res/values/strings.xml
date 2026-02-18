@@ -107,12 +107,10 @@
     <string name="preferences_item_contacts_enable_search">Enable contacts search</string>
     <string name="preferences_item_contacts_search_permission_explanation">Enabling contacts search requires permission to read Contacts. You may be asked to grant the access to Contacts.</string>
     <string name="preferences_item_files_enable_search">Enable local file search</string>
-    <string name="preferences_item_files_search_permission_explanation">Search local files by file name. This may request storage permission on Android 12 and older.</string>
-    <string name="preferences_item_files_grant_summary">Tap to grant folder access (used on newer Android versions).</string>
-    <string name="preferences_item_files_grant_downloads_title">Grant access to Downloads folder</string>
-    <string name="preferences_item_files_grant_documents_title">Grant access to Documents folder</string>
-    <string name="preferences_item_files_grant_pictures_title">Grant access to Pictures folder</string>
-    <string name="preferences_item_files_grant_success">Folder access granted for file search.</string>
+    <string name="preferences_item_files_search_permission_explanation">Search local files by file name. Android 11+ requires all files access.</string>
+    <string name="preferences_item_files_open_all_files_access_settings_title">Grant access to all files</string>
+    <string name="preferences_item_files_open_all_files_access_settings_summary_granted">Granted. Local file search can access all files.</string>
+    <string name="preferences_item_files_open_all_files_access_settings_summary_not_granted">Required on Android 11+ to search files in Downloads and other shared folders.</string>
     <string name="preferences_item_advanced_main_edittext_hint_locale_english_title">Notify English input to keyboard input software on command input window</string>
     <string name="preferences_item_advanced_main_edittext_hint_locale_english_summary">Command input window uses setImeHintLocales and sets to English locale. Behavior differs between keyboard input softwares.</string>
     <string name="preferences_item_advanced_main_edittext_flagforceascii_title">Set IME_FLAG_FORCE_ASCII flag on command input window</string>

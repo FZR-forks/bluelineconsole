@@ -8,18 +8,14 @@ Blue Line Console includes an optional local file search provider.
 2. Go to **Files**.
 3. Enable **Enable local file search**.
 
-On Android 12 and below, enabling file search requests storage read permission.
+## Permissions
 
-## Grant access to common folders
+- On Android 10 and below, file search uses storage read permission.
+- On Android 11 and above, file search requires **All files access**.
 
-On newer Android versions, not every local file appears in `MediaStore`.
-To improve coverage (for example files in **Downloads**), the Files settings category has actions to grant persistent folder access:
+Use **Grant access to all files** in the Files settings section to open the system permission page.
 
-- **Grant access to Downloads folder**
-- **Grant access to Documents folder**
-- **Grant access to Pictures folder**
-
-After granting, Blue Line Console can search file names in those folders using Android's Storage Access Framework.
+This is needed so files in shared folders such as **Downloads** can be found reliably.
 
 ## Priority and performance
 

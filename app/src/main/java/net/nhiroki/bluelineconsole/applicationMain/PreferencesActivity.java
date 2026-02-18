@@ -1,12 +1,14 @@
 package net.nhiroki.bluelineconsole.applicationMain;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.Gravity;
 import android.widget.Toast;
 
@@ -24,9 +26,6 @@ public class PreferencesActivity extends BaseWindowActivity {
     private static final int READ_CONTACT_PERMISSION_GRANT_REQUEST_ID = 1;
     private static final int POST_NOTIFICATIONS_PERMISSION_GRANT_REQUEST_ID = 2;
     private static final int READ_EXTERNAL_STORAGE_PERMISSION_GRANT_REQUEST_ID = 3;
-    private static final int OPEN_DOCUMENT_TREE_REQUEST_DOWNLOADS = 11;
-    private static final int OPEN_DOCUMENT_TREE_REQUEST_DOCUMENTS = 12;
-    private static final int OPEN_DOCUMENT_TREE_REQUEST_PICTURES = 13;
 
     private boolean _comingBack = false;
     private PreferencesFragmentWithOnChangeListener preferenceFragment = null;
@@ -95,48 +94,23 @@ public class PreferencesActivity extends BaseWindowActivity {
         MainActivity.setIsComingBack(true);
     }
 
-    protected void requestCommonFolderAccess(String prefKey) {
-        int requestCode;
-        String folderId;
-
-        if (FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_DOWNLOADS_KEY.equals(prefKey)) {
-            requestCode = OPEN_DOCUMENT_TREE_REQUEST_DOWNLOADS;
-            folderId = "Download";
-        } else if (FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_GRANT_DOCUMENTS_KEY.equals(prefKey)) {
-            requestCode = OPEN_DOCUMENT_TREE_REQUEST_DOCUMENTS;
-            folderId = "Documents";
-        } else {
-            requestCode = OPEN_DOCUMENT_TREE_REQUEST_PICTURES;
-            folderId = "Pictures";
+    protected void openAllFilesAccessSettings() {
+        Intent intent = FileSystemSearchCommandSearcher.createAllFilesAccessSettingsIntent(this.getPackageName());
+        if (intent == null) {
+            return;
         }
 
-        Intent intent = FileSystemSearchCommandSearcher.createFolderPickerIntent(folderId);
         this.setComingBackFlag();
-        this.startActivityForResult(intent, requestCode);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode != RESULT_OK || data == null || data.getData() == null) {
-            return;
-        }
-
-        if (requestCode != OPEN_DOCUMENT_TREE_REQUEST_DOWNLOADS
-                && requestCode != OPEN_DOCUMENT_TREE_REQUEST_DOCUMENTS
-                && requestCode != OPEN_DOCUMENT_TREE_REQUEST_PICTURES) {
-            return;
-        }
-
-        Uri treeUri = data.getData();
-        final int flags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
         try {
-            getContentResolver().takePersistableUriPermission(treeUri, flags);
-            FileSystemSearchCommandSearcher.saveTreeUri(this, treeUri);
-            Toast.makeText(this, getString(R.string.preferences_item_files_grant_success), Toast.LENGTH_SHORT).show();
-        } catch (SecurityException ignored) {
+            this.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            try {
+                Intent fallbackIntent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                this.startActivity(fallbackIntent);
+            } catch (ActivityNotFoundException ignored) {
+                // Settings page is not available on this device.
+            }
         }
     }
 
@@ -165,11 +139,16 @@ public class PreferencesActivity extends BaseWindowActivity {
                 }
 
                 if (key.equals(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY) &&
-                        sharedPreferences.getBoolean(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY, false) &&
-                        Build.VERSION.SDK_INT <= 32 &&
-                        ContextCompat.checkSelfPermission(PreferencesFragmentWithOnChangeListener.this.getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    PreferencesFragmentWithOnChangeListener.this.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                            READ_EXTERNAL_STORAGE_PERMISSION_GRANT_REQUEST_ID);
+                        sharedPreferences.getBoolean(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY, false)) {
+                    if (Build.VERSION.SDK_INT >= 30 && !FileSystemSearchCommandSearcher.hasAllFilesAccessPermission()) {
+                        ((PreferencesActivity) PreferencesFragmentWithOnChangeListener.this.getActivity()).openAllFilesAccessSettings();
+                    }
+
+                    if (Build.VERSION.SDK_INT < 30 &&
+                            ContextCompat.checkSelfPermission(PreferencesFragmentWithOnChangeListener.this.getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                        PreferencesFragmentWithOnChangeListener.this.requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                                READ_EXTERNAL_STORAGE_PERMISSION_GRANT_REQUEST_ID);
+                    }
                 }
             };
         }
@@ -198,6 +177,15 @@ public class PreferencesActivity extends BaseWindowActivity {
         super.onResume();
         this._comingBack = false;
         MainActivity.setIsComingBack(false);
+
+        if (Build.VERSION.SDK_INT >= 30 &&
+                !FileSystemSearchCommandSearcher.hasAllFilesAccessPermission() &&
+                PreferenceManager.getDefaultSharedPreferences(this).getBoolean(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY, false)) {
+            PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY, false).apply();
+            if (this.preferenceFragment != null && this.preferenceFragment.findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY) != null) {
+                ((SwitchPreference) this.preferenceFragment.findPreference(FileSystemSearchCommandSearcher.PREF_FILE_SEARCH_ENABLED_KEY)).setChecked(false);
+            }
+        }
     }
 
     @Override

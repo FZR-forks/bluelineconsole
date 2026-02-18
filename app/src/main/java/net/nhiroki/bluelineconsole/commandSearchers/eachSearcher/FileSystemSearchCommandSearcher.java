@@ -11,7 +11,7 @@ import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
-import android.provider.DocumentsContract;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -20,7 +20,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
-import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceManager;
 
 import net.nhiroki.bluelineconsole.R;
@@ -30,7 +29,6 @@ import net.nhiroki.bluelineconsole.interfaces.CandidateEntry;
 import net.nhiroki.bluelineconsole.interfaces.CommandSearcher;
 import net.nhiroki.bluelineconsole.interfaces.EventLauncher;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,16 +38,9 @@ import java.util.Set;
 
 public class FileSystemSearchCommandSearcher implements CommandSearcher {
     public static final String PREF_FILE_SEARCH_ENABLED_KEY = "pref_file_search_enabled";
-    public static final String PREF_FILE_SEARCH_TREE_URIS_KEY = "pref_file_search_tree_uris";
-
-    public static final String PREF_FILE_SEARCH_GRANT_DOWNLOADS_KEY = "pref_file_search_grant_downloads";
-    public static final String PREF_FILE_SEARCH_GRANT_DOCUMENTS_KEY = "pref_file_search_grant_documents";
-    public static final String PREF_FILE_SEARCH_GRANT_PICTURES_KEY = "pref_file_search_grant_pictures";
-
-    public static final String[] COMMON_FOLDER_IDS = new String[]{"Download", "Documents", "Pictures"};
+    public static final String PREF_FILE_SEARCH_OPEN_ALL_FILES_ACCESS_SETTINGS_KEY = "pref_file_search_open_all_files_access_settings";
 
     private static final int MAX_CANDIDATES_PER_QUERY = 40;
-    private static final int MAX_TREE_FILES_TO_SCAN = 1500;
 
     @Override
     public void refresh(Context context) {
@@ -79,8 +70,7 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
             return new ArrayList<>();
         }
 
-        final boolean mediaStorePermissionGranted = hasRequiredPermissionForMediaStore(context);
-        if (Build.VERSION.SDK_INT <= 32 && !mediaStorePermissionGranted) {
+        if (!hasRequiredPermission(context)) {
             pref.edit().putBoolean(PREF_FILE_SEARCH_ENABLED_KEY, false).apply();
             return new ArrayList<>();
         }
@@ -90,61 +80,34 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
             return new ArrayList<>();
         }
 
-        List<ScoredFileResult> scoredResults = new ArrayList<>();
+        return searchUsingMediaStore(context, normalizedQuery);
+    }
+
+    public static Intent createAllFilesAccessSettingsIntent(String packageName) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+            intent.setData(Uri.parse("package:" + packageName));
+            return intent;
+        }
+        return null;
+    }
+
+    public static boolean hasAllFilesAccessPermission() {
+        return Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager();
+    }
+
+    private boolean hasRequiredPermission(Context context) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            return hasAllFilesAccessPermission();
+        }
+
+        return ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private List<CandidateEntry> searchUsingMediaStore(Context context, String query) {
+        List<CandidateEntry> ret = new ArrayList<>();
         Set<String> uriSet = new HashSet<>();
 
-        if (mediaStorePermissionGranted) {
-            searchUsingMediaStore(context, normalizedQuery, scoredResults, uriSet);
-        }
-        searchUsingGrantedFolders(context, normalizedQuery, scoredResults, uriSet);
-
-        Collections.sort(scoredResults, (left, right) -> Integer.compare(left.score, right.score));
-
-        List<CandidateEntry> ret = new ArrayList<>();
-        int limit = Math.min(MAX_CANDIDATES_PER_QUERY, scoredResults.size());
-        for (int i = 0; i < limit; ++i) {
-            ret.add(scoredResults.get(i).entry);
-        }
-
-        return ret;
-    }
-
-    public static Intent createFolderPickerIntent(String commonFolderId) {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        intent.addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
-
-        if (Build.VERSION.SDK_INT >= 26) {
-            Uri initial = DocumentsContract.buildRootUri("com.android.externalstorage.documents", "primary");
-            if (commonFolderId != null && !commonFolderId.isEmpty()) {
-                initial = DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", "primary:" + commonFolderId);
-            }
-            intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, initial);
-        }
-        return intent;
-    }
-
-    public static void saveTreeUri(Context context, Uri uri) {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-        Set<String> current = pref.getStringSet(PREF_FILE_SEARCH_TREE_URIS_KEY, new HashSet<>());
-        Set<String> updated = new HashSet<>(current);
-        updated.add(uri.toString());
-        pref.edit().putStringSet(PREF_FILE_SEARCH_TREE_URIS_KEY, updated).apply();
-    }
-
-    private boolean hasRequiredPermissionForMediaStore(Context context) {
-        if (Build.VERSION.SDK_INT <= 32) {
-            return ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-        }
-
-        // MediaStore Files query is intentionally disabled on Android 13+ for now.
-        // SAF tree-based search still works with user-granted folder access.
-        return false;
-    }
-
-    private void searchUsingMediaStore(Context context, String query, List<ScoredFileResult> scoredResults, Set<String> uriSet) {
         final Uri collectionUri = MediaStore.Files.getContentUri("external");
 
         List<String> projectionList = new ArrayList<>();
@@ -156,21 +119,27 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
         }
         final String[] projection = projectionList.toArray(new String[0]);
 
-        final String selection = MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?";
-        final String[] selectionArgs = new String[]{"%" + query + "%"};
+        final String escapedQuery = query
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+        final String selection = MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ? ESCAPE '\\'";
+        final String[] selectionArgs = new String[]{"%" + escapedQuery + "%"};
         final String sortOrder = MediaStore.Files.FileColumns.DATE_MODIFIED + " DESC";
 
         ContentResolver contentResolver = context.getContentResolver();
 
         try (Cursor cursor = contentResolver.query(collectionUri, projection, selection, selectionArgs, sortOrder)) {
             if (cursor == null) {
-                return;
+                return ret;
             }
 
             int idIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID);
             int nameIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
             int mimeTypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE);
             int relativePathIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.RELATIVE_PATH);
+
+            List<ScoredFileResult> scoredResults = new ArrayList<>();
 
             while (cursor.moveToNext()) {
                 if (idIndex < 0 || nameIndex < 0) {
@@ -201,80 +170,18 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
                 uriSet.add(uriString);
             }
 
-        } catch (RuntimeException ignored) {
+            Collections.sort(scoredResults, (left, right) -> Integer.compare(left.score, right.score));
+
+            int limit = Math.min(MAX_CANDIDATES_PER_QUERY, scoredResults.size());
+            for (int i = 0; i < limit; ++i) {
+                ret.add(scoredResults.get(i).entry);
+            }
+
+        } catch (RuntimeException e) {
+            return new ArrayList<>();
         }
-    }
 
-    private void searchUsingGrantedFolders(Context context, String query, List<ScoredFileResult> scoredResults, Set<String> uriSet) {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-        Set<String> treeUris = pref.getStringSet(PREF_FILE_SEARCH_TREE_URIS_KEY, new HashSet<>());
-
-        for (String treeUriString : treeUris) {
-            if (treeUriString == null || treeUriString.isEmpty()) {
-                continue;
-            }
-
-            Uri treeUri = Uri.parse(treeUriString);
-            DocumentFile root = DocumentFile.fromTreeUri(context, treeUri);
-            if (root == null || !root.canRead()) {
-                continue;
-            }
-
-            scanTree(root, query, context, scoredResults, uriSet);
-        }
-    }
-
-    private void scanTree(DocumentFile root, String query, Context context, List<ScoredFileResult> scoredResults, Set<String> uriSet) {
-        ArrayDeque<DocumentFile> queue = new ArrayDeque<>();
-        queue.add(root);
-
-        int scannedFiles = 0;
-
-        while (!queue.isEmpty() && scannedFiles < MAX_TREE_FILES_TO_SCAN) {
-            DocumentFile current = queue.removeFirst();
-            DocumentFile[] children;
-
-            try {
-                children = current.listFiles();
-            } catch (RuntimeException e) {
-                continue;
-            }
-
-            for (DocumentFile child : children) {
-                if (child == null || !child.canRead()) {
-                    continue;
-                }
-
-                if (child.isDirectory()) {
-                    queue.addLast(child);
-                    continue;
-                }
-
-                ++scannedFiles;
-
-                String name = child.getName();
-                if (name == null || name.trim().isEmpty()) {
-                    continue;
-                }
-
-                int score = StringMatchStrategy.match(context, query, name, false);
-                if (score < 0) {
-                    continue;
-                }
-
-                Uri fileUri = child.getUri();
-                String uriString = fileUri.toString();
-                if (uriSet.contains(uriString)) {
-                    continue;
-                }
-
-                String mimeType = child.getType();
-                String detail = root.getName() == null ? "" : root.getName();
-
-                scoredResults.add(new ScoredFileResult(score, new FileCandidateEntry(name, detail, mimeType, fileUri)));
-                uriSet.add(uriString);
-            }
-        }
+        return ret;
     }
 
     private static class ScoredFileResult {
@@ -319,7 +226,7 @@ public class FileSystemSearchCommandSearcher implements CommandSearcher {
 
         @Override
         public boolean hasLongView() {
-            return true;
+            return !detail.isEmpty();
         }
 
         @Override
