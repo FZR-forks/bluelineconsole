@@ -126,11 +126,22 @@ public class MainActivity extends BaseWindowActivity {
         });
 
         mainInputText.setOnKeyListener((v, keyCode, event) -> {
-            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_DOWN){
-                candidateListView.requestFocus();
-                candidateListView.requestFocusFromTouch();
-                return MainActivity.this.resultCandidateListAdapter.selectChosenNowAsListView() && candidateListView.onKeyDown(keyCode, event);
+            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                return MainActivity.this.focusCandidateListFromInput(false);
             }
+
+            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                return MainActivity.this.focusCandidateListFromInput(true);
+            }
+
+            if (keyCode == KeyEvent.KEYCODE_TAB && event.getAction() == KeyEvent.ACTION_DOWN) {
+                return MainActivity.this.focusCandidateListFromInput(event.isShiftPressed());
+            }
+
+            if (keyCode == KeyEvent.KEYCODE_TAB && event.getAction() == KeyEvent.ACTION_UP) {
+                return true;
+            }
+
             return false;
         });
     }
@@ -326,6 +337,23 @@ public class MainActivity extends BaseWindowActivity {
 
         mainInputText.requestFocus();
         mainInputText.requestFocusFromTouch();
+    }
+
+    private boolean focusCandidateListFromInput(boolean moveUp) {
+        if (this.resultCandidateListAdapter.isEmpty()) {
+            return false;
+        }
+
+        this.candidateListView.requestFocus();
+        this.candidateListView.requestFocusFromTouch();
+
+        if (moveUp) {
+            this.candidateListView.setSelection(this.resultCandidateListAdapter.getCount() - 1);
+            return this.candidateListView.onKeyDown(KeyEvent.KEYCODE_DPAD_UP, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_UP));
+        }
+
+        return this.resultCandidateListAdapter.selectChosenNowAsListView()
+                && this.candidateListView.onKeyDown(KeyEvent.KEYCODE_DPAD_DOWN, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_DOWN));
     }
 
     private void executeSearch(String query) {
