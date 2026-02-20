@@ -93,15 +93,27 @@ public class MainActivity extends BaseWindowActivity {
 
         candidateListView.setOnKeyListener((v, keyCode, event) -> {
             if (event.getAction() == KeyEvent.ACTION_DOWN && v.onKeyDown(keyCode, event)) {
+                resultCandidateListAdapter.markSelectionKnownByListView();
                 return true;
             }
 
-            //noinspection RedundantIfStatement
             if (event.getAction() == KeyEvent.ACTION_UP && v.onKeyUp(keyCode, event)) {
+                resultCandidateListAdapter.markSelectionKnownByListView();
                 return true;
             }
 
             return false;
+        });
+
+        candidateListView.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                resultCandidateListAdapter.markSelectionKnownByListView();
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
         });
 
         EditTextConfigurations.applyCommandEditTextConfigurations(mainInputText, this);
@@ -345,15 +357,12 @@ public class MainActivity extends BaseWindowActivity {
         }
 
         this.candidateListView.requestFocus();
-        this.candidateListView.requestFocusFromTouch();
 
         if (moveUp) {
-            this.candidateListView.setSelection(this.resultCandidateListAdapter.getCount() - 1);
-            return this.candidateListView.onKeyDown(KeyEvent.KEYCODE_DPAD_UP, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_UP));
+            return this.resultCandidateListAdapter.selectLastChoiceAsListView();
         }
 
-        return this.resultCandidateListAdapter.selectChosenNowAsListView()
-                && this.candidateListView.onKeyDown(KeyEvent.KEYCODE_DPAD_DOWN, new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_DOWN));
+        return this.resultCandidateListAdapter.selectFirstChoiceAsListView();
     }
 
     private void executeSearch(String query) {

@@ -37,6 +37,7 @@ class CandidateListAdapter extends ArrayAdapter<CandidateEntry> {
     private static final int CHOICE_KNOWN_BY_LISTVIEW = -3;
 
     private final Map<Integer, View> unrecyclableViews = new HashMap<>();
+    private boolean keepCurrentChoiceOnNextNotify = false;
     private Boolean show_icons = true;
     CandidateListAdapter(MainActivity activity, List<CandidateEntry> objects, ListView listView) {
         super(activity, 0, objects);
@@ -97,7 +98,7 @@ class CandidateListAdapter extends ArrayAdapter<CandidateEntry> {
 
         TypedValue selectedItemBackground = new TypedValue();
         getContext().getTheme().resolveAttribute(R.attr.bluelineconsoleSelectedItemBackgroundColor, selectedItemBackground, true);
-        convertView.setBackgroundColor((position == getChosenNowExplicitly())?  selectedItemBackground.data: Color.TRANSPARENT);
+        convertView.setBackgroundColor((position == getActiveSelectedPosition()) ? selectedItemBackground.data : Color.TRANSPARENT);
 
         if (icon == null || !show_icons) {
             iconView.setImageResource(android.R.color.transparent);
@@ -118,7 +119,15 @@ class CandidateListAdapter extends ArrayAdapter<CandidateEntry> {
     @Override
     public void notifyDataSetChanged() {
         this.unrecyclableViews.clear();
-        this.chosenNowExplicitly = CHOICE_NOT_SET_YET;
+        if (!this.keepCurrentChoiceOnNextNotify) {
+            this.chosenNowExplicitly = CHOICE_NOT_SET_YET;
+        }
+        this.keepCurrentChoiceOnNextNotify = false;
+        super.notifyDataSetChanged();
+    }
+
+    private void notifySelectionChanged() {
+        this.keepCurrentChoiceOnNextNotify = true;
         super.notifyDataSetChanged();
     }
 
@@ -137,19 +146,78 @@ class CandidateListAdapter extends ArrayAdapter<CandidateEntry> {
         return super.getItemViewType(position);
     }
 
+    private int getActiveSelectedPosition() {
+        return this.getChosenNowExplicitly();
+    }
+
+    private int findFirstSelectablePosition() {
+        for (int i = 0; i < this.getCount(); ++i) {
+            if (this.getItem(i).hasEvent()) {
+                return i;
+            }
+        }
+        return CHOICE_UNAVAILABLE;
+    }
+
+    private int findLastSelectablePosition() {
+        for (int i = this.getCount() - 1; i >= 0; --i) {
+            if (this.getItem(i).hasEvent()) {
+                return i;
+            }
+        }
+        return CHOICE_UNAVAILABLE;
+    }
+
+    public boolean selectFirstChoiceAsListView() {
+        int choice = this.findFirstSelectablePosition();
+        if (choice == CHOICE_UNAVAILABLE) {
+            return false;
+        }
+
+        this.chosenNowExplicitly = CHOICE_KNOWN_BY_LISTVIEW;
+        this.listView.setSelection(choice);
+        this.notifySelectionChanged();
+        return true;
+    }
+
+    public boolean selectLastChoiceAsListView() {
+        int choice = this.findLastSelectablePosition();
+        if (choice == CHOICE_UNAVAILABLE) {
+            return false;
+        }
+
+        this.chosenNowExplicitly = CHOICE_KNOWN_BY_LISTVIEW;
+        this.listView.setSelection(choice);
+        this.notifySelectionChanged();
+        return true;
+    }
+
+    public void markSelectionKnownByListView() {
+        this.chosenNowExplicitly = CHOICE_KNOWN_BY_LISTVIEW;
+        this.notifySelectionChanged();
+    }
+
     public int getChosenNowExplicitly() {
+        if (chosenNowExplicitly == CHOICE_KNOWN_BY_LISTVIEW) {
+            final int selectedPosition = this.listView.getSelectedItemPosition();
+            if (selectedPosition >= 0 && selectedPosition < this.getCount() && this.getItem(selectedPosition).hasEvent()) {
+                return selectedPosition;
+            }
+            this.chosenNowExplicitly = CHOICE_NOT_SET_YET;
+        }
+
         if (chosenNowExplicitly != CHOICE_NOT_SET_YET) {
             return chosenNowExplicitly;
         }
 
-        for (int i = 0; i < this.getCount(); ++i) {
-            if (this.getItem(i).hasEvent()) {
-                this.chosenNowExplicitly = i;
-                return i;
-            }
+        final int firstSelectablePosition = this.findFirstSelectablePosition();
+        if (firstSelectablePosition == CHOICE_UNAVAILABLE) {
+            this.chosenNowExplicitly = CHOICE_UNAVAILABLE;
+            return chosenNowExplicitly;
         }
-        this.chosenNowExplicitly = CHOICE_UNAVAILABLE;
-        return chosenNowExplicitly;
+
+        this.chosenNowExplicitly = firstSelectablePosition;
+        return firstSelectablePosition;
     }
 
     public boolean selectChosenNowAsListView() {
@@ -161,6 +229,7 @@ class CandidateListAdapter extends ArrayAdapter<CandidateEntry> {
 
         this.chosenNowExplicitly = CHOICE_KNOWN_BY_LISTVIEW;
         this.listView.setSelection(choice);
+        this.notifySelectionChanged();
         return true;
     }
 
