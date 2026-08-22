@@ -93,15 +93,27 @@ public class MainActivity extends BaseWindowActivity {
 
         candidateListView.setOnKeyListener((v, keyCode, event) -> {
             if (event.getAction() == KeyEvent.ACTION_DOWN && v.onKeyDown(keyCode, event)) {
+                resultCandidateListAdapter.markSelectionKnownByListView();
                 return true;
             }
 
-            //noinspection RedundantIfStatement
             if (event.getAction() == KeyEvent.ACTION_UP && v.onKeyUp(keyCode, event)) {
+                resultCandidateListAdapter.markSelectionKnownByListView();
                 return true;
             }
 
             return false;
+        });
+
+        candidateListView.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                resultCandidateListAdapter.markSelectionKnownByListView();
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
         });
 
         EditTextConfigurations.applyCommandEditTextConfigurations(mainInputText, this);
@@ -126,11 +138,22 @@ public class MainActivity extends BaseWindowActivity {
         });
 
         mainInputText.setOnKeyListener((v, keyCode, event) -> {
-            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_DOWN){
-                candidateListView.requestFocus();
-                candidateListView.requestFocusFromTouch();
-                return MainActivity.this.resultCandidateListAdapter.selectChosenNowAsListView() && candidateListView.onKeyDown(keyCode, event);
+            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                return MainActivity.this.focusCandidateListFromInput(false);
             }
+
+            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                return MainActivity.this.focusCandidateListFromInput(true);
+            }
+
+            if (keyCode == KeyEvent.KEYCODE_TAB && event.getAction() == KeyEvent.ACTION_DOWN) {
+                return MainActivity.this.focusCandidateListFromInput(event.isShiftPressed());
+            }
+
+            if (keyCode == KeyEvent.KEYCODE_TAB && event.getAction() == KeyEvent.ACTION_UP) {
+                return true;
+            }
+
             return false;
         });
     }
@@ -149,6 +172,12 @@ public class MainActivity extends BaseWindowActivity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        if (this.shouldHandleCloseShortcut(event)) {
+            this.superKeyPressedAlone = false;
+            this.closeForKeyboardShortcut();
+            return true;
+        }
+
         if (!this.shouldHandleSuperKeyOverview(event)) {
             this.superKeyPressedAlone = false;
             return super.dispatchKeyEvent(event);
@@ -322,6 +351,20 @@ public class MainActivity extends BaseWindowActivity {
         mainInputText.requestFocusFromTouch();
     }
 
+    private boolean focusCandidateListFromInput(boolean moveUp) {
+        if (this.resultCandidateListAdapter.isEmpty()) {
+            return false;
+        }
+
+        this.candidateListView.requestFocus();
+
+        if (moveUp) {
+            return this.resultCandidateListAdapter.selectLastChoiceAsListView();
+        }
+
+        return this.resultCandidateListAdapter.selectFirstChoiceAsListView();
+    }
+
     private void executeSearch(String query) {
         List<CandidateEntry> candidates = new ArrayList<>();
 
@@ -402,6 +445,26 @@ public class MainActivity extends BaseWindowActivity {
 
     static boolean isSuperKey(int keyCode) {
         return keyCode == KeyEvent.KEYCODE_META_LEFT || keyCode == KeyEvent.KEYCODE_META_RIGHT;
+    }
+
+    private boolean shouldHandleCloseShortcut(KeyEvent event) {
+        return isCloseShortcutEvent(event);
+    }
+
+    static boolean isCloseShortcutEvent(KeyEvent event) {
+        if (event == null || event.getAction() != KeyEvent.ACTION_UP) {
+            return false;
+        }
+
+        final int keyCode = event.getKeyCode();
+        return keyCode == KeyEvent.KEYCODE_ESCAPE
+                || (keyCode == KeyEvent.KEYCODE_W && event.isCtrlPressed())
+                || (keyCode == KeyEvent.KEYCODE_Q && event.isCtrlPressed())
+                || (keyCode == KeyEvent.KEYCODE_F4 && event.isAltPressed());
+    }
+
+    private void closeForKeyboardShortcut() {
+        this.finish();
     }
 
     private boolean shouldHandleSuperKeyOverview(KeyEvent event) {

@@ -84,6 +84,9 @@
     <string name="preferences_item_main_show_startup_help_summary">This option just shows you the guidance for help command. It is better to disable this option once you remembered "help" command.</string>
     <string name="preferences_item_default_assist_app_title">Set as default assistant app</string>
     <string name="preferences_item_default_assist_app_summary">To open Blue Line Console by long-pressing home button everywhere, set it as default assistant app from setting menu.</string>
+    <string name="preferences_item_super_key_accessibility_permission_title">Super key accessibility permission</string>
+    <string name="preferences_item_super_key_accessibility_permission_summary_not_granted">Required to open Blue Line Console with Super/Windows key. Tap to open Accessibility settings.</string>
+    <string name="preferences_item_super_key_accessibility_permission_summary_granted">Granted. Blue Line Console can listen to Super/Windows key from a physical keyboard.</string>
     <string name="preferences_item_overlay_permission_title">Display over other apps permission</string>
     <string name="preferences_item_overlay_permission_summary_not_granted">Required to show Blue Line Console over other apps. Tap to open system settings.</string>
     <string name="preferences_item_overlay_permission_summary_granted">Granted. Blue Line Console can draw over other apps.</string>

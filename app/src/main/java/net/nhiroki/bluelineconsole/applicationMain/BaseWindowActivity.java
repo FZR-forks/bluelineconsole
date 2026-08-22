@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.MotionEvent;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -55,6 +56,17 @@ public class BaseWindowActivity extends AppCompatActivity {
 
     public boolean isSmallWindow() {
         return this.smallWindow;
+    }
+
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (MainActivity.isCloseShortcutEvent(event)) {
+            this.finish();
+            return true;
+        }
+
+        return super.dispatchKeyEvent(event);
     }
 
     @Override
