@@ -55,7 +55,7 @@ jobs:
       - name: Test and lint
         run: |
           ./gradlew testDebugUnitTest lintRelease --stacktrace || {
-            cat app/build/reports/lint-results-release.txt 2>/dev/null || true
+            find app/build -name lint-results-release.txt -exec cat {} \;
             exit 1
           }
 
