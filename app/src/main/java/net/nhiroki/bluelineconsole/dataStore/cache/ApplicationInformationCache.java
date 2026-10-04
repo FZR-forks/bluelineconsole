@@ -18,7 +18,7 @@ public class ApplicationInformationCache extends SQLiteOpenHelper {
     private static final String[] columnsInDB = {"packagename", "locale", "version", "launchable", "label"};
 
     public ApplicationInformationCache(Context context) {
-        super(context, new File(context.getCacheDir(), DATABASE_NAME).toString(), null,  DATABASE_VERSION);
+        super(context.getApplicationContext(), new File(context.getCacheDir(), DATABASE_NAME).toString(), null,  DATABASE_VERSION);
     }
 
     public static void destroyFilesForCleanTest(Context context) {
@@ -46,18 +46,17 @@ public class ApplicationInformationCache extends SQLiteOpenHelper {
     public List<ApplicationInformation> getAllApplicationCaches() {
         List<ApplicationInformation> ret = new ArrayList<>();
 
-        Cursor curApp = this.getReadableDatabase().query("appinfo", columnsInDB, null, null, null, null, null);
-
-        while(curApp.moveToNext()) {
-            ret.add(new ApplicationInformation(
-                    curApp.getString(curApp.getColumnIndex("packagename")),
-                    curApp.getString(curApp.getColumnIndex("locale")),
-                    curApp.getInt(curApp.getColumnIndex("version")),
-                    curApp.getString(curApp.getColumnIndex("label")),
-                    curApp.getInt(curApp.getColumnIndex("launchable")) != 0
-                    ));
+        try (Cursor curApp = this.getReadableDatabase().query("appinfo", columnsInDB, null, null, null, null, null)) {
+            while (curApp.moveToNext()) {
+                ret.add(new ApplicationInformation(
+                        curApp.getString(curApp.getColumnIndex("packagename")),
+                        curApp.getString(curApp.getColumnIndex("locale")),
+                        curApp.getInt(curApp.getColumnIndex("version")),
+                        curApp.getString(curApp.getColumnIndex("label")),
+                        curApp.getInt(curApp.getColumnIndex("launchable")) != 0
+                ));
+            }
         }
-        curApp.close();
 
         return ret;
     }

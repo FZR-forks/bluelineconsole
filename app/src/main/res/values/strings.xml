@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Blue Line Console</string>
+    <string name="app_source_code_url" translatable="false">https://github.com/FZR-forks/bluelineconsole</string>
+    <string name="preferences_item_about_this_app_github_repo">Blue Line Console on GitHub</string>
+    <string name="preferences_item_about_this_app_github_repo_summary">Access https://github.com/nhirokinet/bluelineconsole</string>
 
     <!-- ActivityMain -->
     <string name="displayedFullVersionString">Version %1$s</string>
@@ -120,9 +123,7 @@
     <string name="preferences_item_advanced_main_edittext_flagforceascii_summary">IME_FLAG_FORCE_ASCII is intended to use ASCII characters for input. Behavior differs between keyboard input softwares.</string>
     <string name="preferences_item_accept_arbitrary_url">Accept arbitrary scheme for URL</string>
     <string name="preferences_item_accept_arbitrary_url_summary">By default, Blue Line Console accepts only URL starting with http:// and https:// as URL input. By enabling option, other schemes are also accepted as URL input.</string>
-    <string name="preferences_item_about_this_app_github_repo">Blue Line Console on GitHub</string>
-    <string name="preferences_item_about_this_app_github_repo_summary">Access https://github.com/nhirokinet/bluelineconsole</string>
-    <string name="preferences_item_about_this_app_licensing_information">Licensing information</string>
+    <string name="preferences_item_about_this_app_licensing_information">License information</string>
 
     <!-- Preferences items, URL screens -->
     <string name="preferences_url_add_button">Add custom URL or search engine</string>
@@ -165,6 +166,11 @@
     <!-- Contact search -->
     <string name="contacts_action_dial_phone_number">Dial: %1$s</string>
     <string name="contacts_action_email">E-mail: %1$s</string>
+
+    <!-- factor command -->
+    <string name="factor_error_not_valid_integer">is not valid integer</string>
+    <string name="factor_error_not_positive_number">is not positive number</string>
+    <string name="factor_error_factor_too_large">includes factor larger than %1$s</string>
 
     <!-- Error messages, user errors -->
     <string name="error_invalid_url_least_validation_for_web">Invalid URL: must start with https:// or http:// and at least one more slash (\"/\").</string>
@@ -216,6 +222,7 @@
         \n-&#032;date
         \n-&#032;all_apps
         \n-&#032;cal [&lt;month&gt; &lt;year&gt;]
+        \n-&#032;factor &lt;number&gt; ...
         \n-&#032;bing &lt;query&gt;
         \n-&#032;duckduckgo &lt;query&gt;
         \n-&#032;google &lt;query&gt;
@@ -238,11 +245,11 @@
     </string>
 
     <!-- Licensing information, untranslatable not to make slightest difference -->
-    <string name="licensing_notice_header" translatable="false">Licensing information</string>
+    <string name="licensing_notice_header" translatable="false">License information</string>
     <string name="licensing_notice_body" translatable="false">
         Blue Line Console is licensed under the Apache License, Version 2.0.
         \n
-        \nBlue Line Console contains code from the following library, which Apache License, Version 2.0, is applied to.
+        \nBlue Line Console contains code from the following libraries, which the Apache License, Version 2.0, is applied to.
         \n
         \n- Android Jetpack
         \n- kotlinx-coroutines-android
@@ -250,6 +257,7 @@
         \n- kotlin-stdlib
         \n- JetBrains Java Annotations
         \n- Google Guava
+        \n- JSpecify
     </string>
 
     <!-- Legal English texts -->
