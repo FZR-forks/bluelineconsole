@@ -76,7 +76,7 @@ jobs:
 
       - name: Build release APK
         env:
-          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.BLC_RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ github.event_name != 'pull_request' && secrets.BLC_RELEASE_KEYSTORE_PASSWORD || '' }}
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Prepare APK
