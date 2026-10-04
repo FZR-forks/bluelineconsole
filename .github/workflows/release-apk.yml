@@ -53,7 +53,11 @@ jobs:
           echo "RELEASE_APK=bluelineconsole-${VERSION_NAME}.apk" >> "$GITHUB_ENV"
 
       - name: Test and lint
-        run: ./gradlew testDebugUnitTest lintRelease --stacktrace
+        run: |
+          ./gradlew testDebugUnitTest lintRelease --stacktrace || {
+            cat app/build/reports/lint-results-release.txt 2>/dev/null || true
+            exit 1
+          }
 
       - name: License check
         run: ./ci/license-checker.py

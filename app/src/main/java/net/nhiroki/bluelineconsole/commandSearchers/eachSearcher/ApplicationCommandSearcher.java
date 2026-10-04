@@ -471,6 +471,7 @@ public class ApplicationCommandSearcher implements CommandSearcher {
         }
     }
 
+    @androidx.annotation.RequiresApi(25)
     private static class AppShortcutCandidateEntry implements CandidateEntry {
         private final ShortcutInfoWithAppLabel shortcutInfoWithAppLabel;
         private final boolean displayPackageName;
