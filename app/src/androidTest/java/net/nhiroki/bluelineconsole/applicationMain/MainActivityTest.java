@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.LocaleList;
+import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
 import android.test.AndroidTestCase;
 
@@ -32,6 +33,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.text.SimpleDateFormat;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -41,8 +43,17 @@ public class MainActivityTest extends AndroidTestCase {
     private Context context = null;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         this.context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+        // Complete the fork's overlay permission setup before testing commands.
+        // Otherwise MainActivity opens system settings and stops during launch.
+        try (InputStream output = new ParcelFileDescriptor.AutoCloseInputStream(
+                InstrumentationRegistry.getInstrumentation().getUiAutomation()
+                        .executeShellCommand("appops set " + context.getPackageName() + " SYSTEM_ALERT_WINDOW allow"))) {
+            byte[] buffer = new byte[1024];
+            while (output.read(buffer) != -1) { }
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.getSystemService(LocaleManager.class).setApplicationLocales(new LocaleList(new Locale("en", "US")));

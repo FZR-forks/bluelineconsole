@@ -150,7 +150,7 @@ public class PreferencesEachURLActivity extends BaseWindowActivity {
             ret.add(new AppSearchProviderItem(entry.getKey(), display));
         }
 
-        ret.sort((o1, o2) -> o1.appLabel.compareTo(o2.appLabel));
+        java.util.Collections.sort(ret, (o1, o2) -> o1.appLabel.compareTo(o2.appLabel));
         return ret;
     }
 

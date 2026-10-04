@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Blue Line Console</string>
     <string name="app_source_code_url" translatable="false">https://github.com/FZR-forks/bluelineconsole</string>
     <string name="preferences_item_about_this_app_github_repo">Blue Line Console on GitHub</string>
@@ -78,7 +78,7 @@
     <string name="preferences_category_custom_commands">Custom commands</string>
     <string name="preferences_category_home_screen">Home Screen</string>
     <string name="preferences_category_contacts">Contacts</string>
-    <string name="preferences_category_files">Files</string>
+    <string name="preferences_category_files" tools:ignore="MissingTranslation">Files</string>
     <string name="preferences_category_advanced">Advanced</string>
     <string name="preferences_category_about_this_app">About</string>
 
@@ -87,12 +87,12 @@
     <string name="preferences_item_main_show_startup_help_summary">This option just shows you the guidance for help command. It is better to disable this option once you remembered "help" command.</string>
     <string name="preferences_item_default_assist_app_title">Set as default assistant app</string>
     <string name="preferences_item_default_assist_app_summary">To open Blue Line Console by long-pressing home button everywhere, set it as default assistant app from setting menu.</string>
-    <string name="preferences_item_super_key_accessibility_permission_title">Super key accessibility permission</string>
-    <string name="preferences_item_super_key_accessibility_permission_summary_not_granted">Required to open Blue Line Console with Super/Windows key. Tap to open Accessibility settings.</string>
-    <string name="preferences_item_super_key_accessibility_permission_summary_granted">Granted. Blue Line Console can listen to Super/Windows key from a physical keyboard.</string>
-    <string name="preferences_item_overlay_permission_title">Display over other apps permission</string>
-    <string name="preferences_item_overlay_permission_summary_not_granted">Required to show Blue Line Console over other apps. Tap to open system settings.</string>
-    <string name="preferences_item_overlay_permission_summary_granted">Granted. Blue Line Console can draw over other apps.</string>
+    <string name="preferences_item_super_key_accessibility_permission_title" tools:ignore="MissingTranslation">Super key accessibility permission</string>
+    <string name="preferences_item_super_key_accessibility_permission_summary_not_granted" tools:ignore="MissingTranslation">Required to open Blue Line Console with Super/Windows key. Tap to open Accessibility settings.</string>
+    <string name="preferences_item_super_key_accessibility_permission_summary_granted" tools:ignore="MissingTranslation">Granted. Blue Line Console can listen to Super/Windows key from a physical keyboard.</string>
+    <string name="preferences_item_overlay_permission_title" tools:ignore="MissingTranslation">Display over other apps permission</string>
+    <string name="preferences_item_overlay_permission_summary_not_granted" tools:ignore="MissingTranslation">Required to show Blue Line Console over other apps. Tap to open system settings.</string>
+    <string name="preferences_item_overlay_permission_summary_granted" tools:ignore="MissingTranslation">Granted. Blue Line Console can draw over other apps.</string>
     <string name="preferences_item_main_always_show_notification_title">Always show icon as notification</string>
     <string name="preferences_item_main_always_show_notification_summary">Always show the notification icon to start Blue Line Console everywhere.</string>
     <string name="preferences_item_text_match_strategy_title">Text search matching style</string>
@@ -112,11 +112,11 @@
     <string name="preferences_item_home_screen_default_items_summary">Display results and widgets when nothing is input at home screen, when Blue Line Console is set to home app.</string>
     <string name="preferences_item_contacts_enable_search">Enable contacts search</string>
     <string name="preferences_item_contacts_search_permission_explanation">Enabling contacts search requires permission to read Contacts. You may be asked to grant the access to Contacts.</string>
-    <string name="preferences_item_files_enable_search">Enable local file search</string>
-    <string name="preferences_item_files_search_permission_explanation">Search local files by file name. Android 11+ requires all files access.</string>
-    <string name="preferences_item_files_open_all_files_access_settings_title">Grant access to all files</string>
-    <string name="preferences_item_files_open_all_files_access_settings_summary_granted">Granted. Local file search can access all files.</string>
-    <string name="preferences_item_files_open_all_files_access_settings_summary_not_granted">Required on Android 11+ to search files in Downloads and other shared folders.</string>
+    <string name="preferences_item_files_enable_search" tools:ignore="MissingTranslation">Enable local file search</string>
+    <string name="preferences_item_files_search_permission_explanation" tools:ignore="MissingTranslation">Search local files by file name. Android 11+ requires all files access.</string>
+    <string name="preferences_item_files_open_all_files_access_settings_title" tools:ignore="MissingTranslation">Grant access to all files</string>
+    <string name="preferences_item_files_open_all_files_access_settings_summary_granted" tools:ignore="MissingTranslation">Granted. Local file search can access all files.</string>
+    <string name="preferences_item_files_open_all_files_access_settings_summary_not_granted" tools:ignore="MissingTranslation">Required on Android 11+ to search files in Downloads and other shared folders.</string>
     <string name="preferences_item_advanced_main_edittext_hint_locale_english_title">Notify English input to keyboard input software on command input window</string>
     <string name="preferences_item_advanced_main_edittext_hint_locale_english_summary">Command input window uses setImeHintLocales and sets to English locale. Behavior differs between keyboard input softwares.</string>
     <string name="preferences_item_advanced_main_edittext_flagforceascii_title">Set IME_FLAG_FORCE_ASCII flag on command input window</string>
@@ -131,7 +131,7 @@
     <string name="preferences_url_column_display_name">Display name</string>
     <string name="preferences_url_column_url">URL (or app search provider)</string>
     <string name="preferences_url_column_has_query">Search engine (query is added at the end when enabled)</string>
-    <string name="preferences_url_select_app_button">Select app as search provider</string>
+    <string name="preferences_url_select_app_button" tools:ignore="MissingTranslation">Select app as search provider</string>
     <string name="preferences_url_property_enabled">Enabled</string>
     <string name="preferences_url_property_disabled">Disabled</string>
     <string name="preferences_url_property_preset">Preset</string>
@@ -182,9 +182,9 @@
     <string name="error_failure_could_not_start_command">ERROR: could not start command</string>
     <string name="error_failure_could_not_open_url">ERROR: could not open URL</string>
     <string name="error_failure_not_found_opening_application_with_class">\"%1$s\" is not a launchable package.</string>
-    <string name="error_failure_not_found_opening_application">No application can open this file.</string>
-    <string name="error_no_app_search_providers">No apps with search support found.</string>
-    <string name="error_app_search_provider_requires_query">App search providers require the search engine option to be enabled.</string>
+    <string name="error_failure_not_found_opening_application" tools:ignore="MissingTranslation">No application can open this file.</string>
+    <string name="error_no_app_search_providers" tools:ignore="MissingTranslation">No apps with search support found.</string>
+    <string name="error_app_search_provider_requires_query" tools:ignore="MissingTranslation">App search providers require the search engine option to be enabled.</string>
     <string name="error_failure_could_not_connect_to_the_widget">ERROR: could not connect to the widget</string>
 
     <!-- Error messages, app internal errors -->
@@ -262,5 +262,5 @@
 
     <!-- Legal English texts -->
     <string name="license_apache_license_v2.0_name" translatable="false">Apache License, Version 2.0</string>
-    <string name="accessibility_service_super_key_description">Open Blue Line Console overview when Super/Windows key is pressed on a physical keyboard.</string>
+    <string name="accessibility_service_super_key_description" tools:ignore="MissingTranslation">Open Blue Line Console overview when Super/Windows key is pressed on a physical keyboard.</string>
 </resources>
