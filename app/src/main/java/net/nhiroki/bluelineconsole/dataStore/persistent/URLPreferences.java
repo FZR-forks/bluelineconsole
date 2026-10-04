@@ -19,12 +19,12 @@ public class URLPreferences extends SQLiteOpenHelper {
 
 
     private URLPreferences(Context context) {
-        super(context, DATABASE_NAME, null,  DATABASE_VERSION);
+        super(context.getApplicationContext(), DATABASE_NAME, null,  DATABASE_VERSION);
     }
 
     public synchronized static URLPreferences getInstance(Context context) {
         if (_singleton == null) {
-            _singleton = new URLPreferences(context);
+            _singleton = new URLPreferences(context.getApplicationContext());
         }
         return _singleton;
     }
@@ -74,20 +74,18 @@ public class URLPreferences extends SQLiteOpenHelper {
     public List<URLEntry> getAllEntries() {
         List<URLEntry> ret = new ArrayList<>();
 
-        Cursor curEntry = this.getReadableDatabase().query("url_info", columnsInDB, null, null, null, null, "id");
+        try (Cursor curEntry = this.getReadableDatabase().query("url_info", columnsInDB, null, null, null, null, "id")) {
+            while (curEntry.moveToNext()) {
+                URLEntry e = new URLEntry();
+                e.id = curEntry.getInt(curEntry.getColumnIndex("id"));
+                e.name = curEntry.getString(curEntry.getColumnIndex("name"));
+                e.display_name = curEntry.getString(curEntry.getColumnIndex("display_name"));
+                e.url_base = curEntry.getString(curEntry.getColumnIndex("url_base"));
+                e.has_query = curEntry.getInt(curEntry.getColumnIndex("has_query")) != 0;
 
-        while(curEntry.moveToNext()) {
-            URLEntry e = new URLEntry();
-            e.id = curEntry.getInt(curEntry.getColumnIndex("id"));
-            e.name = curEntry.getString(curEntry.getColumnIndex("name"));
-            e.display_name = curEntry.getString(curEntry.getColumnIndex("display_name"));
-            e.url_base = curEntry.getString(curEntry.getColumnIndex("url_base"));
-            e.has_query = curEntry.getInt(curEntry.getColumnIndex("has_query")) != 0;
-
-            ret.add(e);
+                ret.add(e);
+            }
         }
-
-        curEntry.close();
 
         return ret;
     }
